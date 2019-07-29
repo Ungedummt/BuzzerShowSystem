@@ -67,7 +67,7 @@ WiFiServer Port_Master(88);
 //----------------------------------------------------------------------------//
 
 void setup() {
-	Prepaere();
+	Prepaere(); // Englisch lernen wir noch XD (prepare)
   NeoPixel_Setup();
   Display_Setup();
   WiFi_Setup();
