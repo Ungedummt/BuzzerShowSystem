@@ -9,8 +9,6 @@ int wrongButton[2]{842,843};
 int rightButton[2]{835,838};
 int GameBegin[2]{805,806};
 
-//float Time;
-boolean newBuzzer = false;
 
 //LEDS
 #define addBuzzerLED D3
@@ -19,31 +17,34 @@ boolean newBuzzer = false;
 #define ResetButtonLED D2
 #define FalschButtonLED D1
 
-//Sonstiges
+//Arrays
+int IPArray [20] = {};
+int TimeArray [20] = {};
+String TypeArray [20] = {};
 
-//
+
+//Sonstiges
 long requestTime = 0;
 String type;
 String ip;
 boolean finish;
-boolean gameistrue;
-int MasterAnswer;//0 = nichts / 1 = Richtig / 2 = Falsch
-int IPArray [20] = {};
-int TimeArray [20] = {};
-String TypeArray [20] = {};
-int rqt = 0;
+boolean GamesState;
+int MasterAnswer; //0 = nichts / 1 = Richtig / 2 = Falsch
 float millis_;
 float millisOld;
+float Time;
+boolean newBuzzer = false;
+String request;
 
-//Variabeln Network--------------------------------------------------------------------------
+//Network Variabeln--------------------------------------------------------------------------
 char* SSID = "Buzzer-AP";           // SSID
 char* KEY = "6732987frkubz3458";    // password
 #define CHANNEL 1
 #define HIDDEN true
 int max_connection = 0;
 int ClientNum = 0;
-String request;
 
+//Komunikation
 WiFiServer APServerPort(80);
 IPAddress IP(192, 168, 4, 1);
 IPAddress mask = (255, 255, 255, 0);
@@ -51,20 +52,9 @@ IPAddress mask = (255, 255, 255, 0);
 IPAddress ClientServerAddress(192,168,4,100);     // IP address of the ClientServer
 WiFiClient APclient;
 
-
-//WiFiServer server(80);
-//IPAddress IP(192, 168, 4, 1);
-//WiFiServer server(80);
-//IPAddress clientPort(192, 168, 4, 100); //das
-//WiFiClient ClientOutput; // Client name for AP mode (AP to Client) //das
-//WiFiClient client;	 // Client name for AP mode (Clinet to AP)
-//IPAddress IP(192,168,4,1);
-//IPAddress mask = (255, 255, 255, 0);
 //===========================================================================================
 
 void setup() {
-
-  //pinMode(addBuzzer, INPUT);
   pinMode(addBuzzerLED, OUTPUT);
 
   WiFi.mode(WIFI_AP);
@@ -146,14 +136,14 @@ void loop() {
 	}
 	//if (SerRead == 'G') {
 		//SendToClient(100, "Laaaall");
-		//gameistrue = true;
+		//GamesState = true;
 		//SerRead = '0';
 	//}
 	if (SerRead == 'G') {
 		 // Serial.println(client.println("Testkjguzhghjfghzjfzzfgjfzgfzgth" + '\r'));
 		SendToClient(100, "test");
 		  //SendToClient(100, "Laaaall");
-		  //gameistrue = true;
+		  //GamesState = true;
 		  SerRead = '0';
 	  }
 
@@ -169,7 +159,7 @@ void loop() {
     if (pressed == "1") {
 			SendToClient(ipasint, "SR");
 
-      if(gameistrue == true){
+      if(GamesState == true){
 		  Serial.print("BuzzerPressed: ");
 		  Serial.println(ip);
 		  Serial.println("Waiting for Answer");

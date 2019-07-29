@@ -1,12 +1,18 @@
 #include <ESP8266WiFi.h>
 
 //Variabeln I/O------------------------------------------------------------------------------
-//Buttons
-int addBuzzerButton[2]{825,828};
-int ResetGameButton[2]{845,846};
-int wrongButton[2]{842,843};
-int rightButton[2]{835,838};
-int GameBegin[2]{805,806};
+//Buttons Ranges
+int AddBuzzerButtonRange[2]{825,828};
+int ResetGameButtonRange[2]{845,846};
+int WrongButtonRange[2]{842,843};
+int RightButtonRange[2]{835,838};
+int GameBeginRange[2]{805,806};
+//Button States
+int AddBuzzerButtonState = false;
+int ResetGameButtonState = false;
+int WrongButtonState = false;
+int RightButtonState = false;
+int GameBeginState = false;
 
 
 //LEDS
@@ -103,7 +109,12 @@ void WelcomeMessage(){
 
 void TheGameMaster(){
 DeviceHandler();
-MessageReciever();
+}
+
+//===========================================================================================
+
+void BuzzerHandler(String Action, String Who){  //Sorgt dafir das die Buzzer vereinfacht angesprochen werden können
+
 }
 
 //===========================================================================================
@@ -113,6 +124,10 @@ String MessageReciever(String Message){
 }
 
 //===========================================================================================
+
+void MessageReacting(){
+  MessageReciever();
+}
 
 void MessageTransmitter(String Message, int ID){
 
@@ -131,5 +146,17 @@ void DeviceTimeout(){       //Sorgt dafür das Geräte die nicht mehr Verbunden 
 }
 
 void AddDevice(){           //Solte ein timeout beinhalten
+
+}
+
+void LedHandler(String LedName, String Effect){
+
+}
+
+void AnalogButtonsHandler(){
+
+}
+
+void DataSync(){            //Sorgt dafür das alle Geräte die Neusten Configs haben
 
 }
