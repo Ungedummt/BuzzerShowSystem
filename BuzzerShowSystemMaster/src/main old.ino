@@ -9,7 +9,7 @@ int wrongButton[2]{842,843};
 int rightButton[2]{835,838};
 int GameBegin[2]{805,806};
 
-float Time;
+//float Time;
 boolean newBuzzer = false;
 
 //LEDS
@@ -28,7 +28,6 @@ String ip;
 boolean finish;
 boolean gameistrue;
 int MasterAnswer;//0 = nichts / 1 = Richtig / 2 = Falsch
-String AcceptedMacsArray [20] = {A1:23:45:67:89,B1:23:45:67:89};
 int IPArray [20] = {};
 int TimeArray [20] = {};
 String TypeArray [20] = {};
@@ -162,25 +161,9 @@ void loop() {
     String request = client.readStringUntil('\r');
     client.flush();
     Serial.println("********************************");
-    String MessageType = getValue(request, ';', 0);
-
-    if(MessageType == "NB"){
-      String DEVICEMAC = getValue(request, ';', 2); // Looks like this    NB;100;A1:23:45:67:89
-    		for (int i = 0; i < ClientNum;) {
-    			if (DEVICEMAC == AcceptedMacsArray[i]) {
-            //Buzzer wird hinzugefügt
-
-
-    			}
-    			i++;
-    		}
-    }
-
-    if(MessageType == "NE"){
-
-    }
-
-    String ip = getValue(request, ';', 1);
+    String pressed = getValue(request, ';', 2);
+    String type = getValue(request, ';', 1);
+    String ip = getValue(request, ';', 0);
     int ipasint = ip.toInt();
     Serial.println(pressed);
     if (pressed == "1") {
