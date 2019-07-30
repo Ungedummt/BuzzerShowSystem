@@ -81,11 +81,11 @@ void loop() {
   }
 
   TheGameMaster(); //Hier werden Nachricheten ausgelesen und verwertet
-  DeviceHandler();
   String Message = WiFi_Read();
   if(Message != ""){
     Serial.println(Message);
   }
+
 
 //Nachricht in einzelne Variabeln aufteilen
   String DeviceMAC = getValue(Message, ';', 2);
@@ -106,6 +106,15 @@ void loop() {
         i++;
       }
   }
+
+  if(MessageType = "SM"){
+      for(int i = 0; i < ClientNum ;){
+         if(IDasInt == IPArray[i]){
+          TimeArray[i] = requestTime;
+         }
+        i++;
+        }
+        }
 
   char SerRead = Serial.read();
   if (SerRead == 'A') {
@@ -133,7 +142,7 @@ void loop() {
   SerRead = NULL;
 
 
-
+DeviceHandler();
 }
 
 //===========================================================================================
@@ -214,7 +223,7 @@ void DeviceHandler(){       //Sorgt dafür das sich Geräte Verbinden und Vebund
   if (ClientNum > 0) {
     for (int i = 0; i < ClientNum;) {
       //Serial.println((requestTime - TimeArray[ClientNum]));
-      if ((requestTime - TimeArray[i]) > 100) {
+      if ((requestTime - TimeArray[i]) > 10) {
         Serial.println("");
         Serial.print("Geräte Timeout: IP: ");
         Serial.print(IPArray[i]);
@@ -222,15 +231,16 @@ void DeviceHandler(){       //Sorgt dafür das sich Geräte Verbinden und Vebund
         Serial.print("Buzzer");
         for (int x = i; x < ClientNum;) {
           //Alle werte Zurückrüken
-          Serial.print("point1");
           IPArray[x] = IPArray[i + 1];
-          Serial.print("point2");
           TimeArray[x] = TimeArray[x + 1];
-          Serial.print("point3");
+          TypeArray[x] = TypeArray[i + 1];
+          MacArray[x] = MacArray[x + 1];
           x++;
         }
-        Serial.print("point4");
+        Serial.println("point4");
         ClientNum = ClientNum - 1;
+        Serial.print("ClientNum");
+        Serial.println(ClientNum);
         float TIME = millis();
         float TIME_ = millis();
         if ((TIME_ - TIME) >= 1000) {
@@ -242,6 +252,7 @@ void DeviceHandler(){       //Sorgt dafür das sich Geräte Verbinden und Vebund
       i++;
     }
   }
+
 }
 
 //===========================================================================================
@@ -259,6 +270,8 @@ void AddDevice(String DeviceType, int DeviceID, String DeviceMAC){           //S
         x++;
       }
       ClientNum = ClientNum - 1;
+      Serial.print("ClientNum");
+        Serial.println(ClientNum);
     }
     i++;
   }
@@ -274,6 +287,8 @@ void AddDevice(String DeviceType, int DeviceID, String DeviceMAC){           //S
   TypeArray[ClientNum] = DeviceType;
   TimeArray[ClientNum] = requestTime;
   ClientNum = ClientNum + 1;
+  Serial.print("ClientNum");
+        Serial.println(ClientNum);
   ArrayDebug_function(IPArray);
 
 
