@@ -135,7 +135,7 @@ void loop() {
 			Display_Write("Pressed");
 			Serial.println("Pressed");
 			lastDisplay = millis();
-			if (SendAllowed && GameisTrue) {
+			if (SendAllowed && GameisTrue && !AnswerTrue) {
 				NeoPixelColor_Write("BLUE", 255);
 				lastPressed = millis();
 				WiFi_Write("BP", "");
@@ -177,6 +177,12 @@ void loop() {
 
 		if (request == "AC") {
 			SendAllowed = true;
+		}
+		if (request == "DE") {
+			SendAllowed = false;
+			GameisTrue = false;
+			AnswerTrue = false;
+
 		}
 		if (request == "AR" && GameisTrue && !AnswerTrue) {
 			NeoPixelColor_Write("GREEN", 255);
