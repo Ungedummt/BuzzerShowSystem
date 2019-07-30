@@ -14,12 +14,21 @@
 // SCL = D1
 // SDA = D2
 #define NeoPixelPin D3
-#define button D4
+#define BuzzerPin D4
 
 #define NeoPixelNum  4
-int NeoRed[NeoPixelNum] = { 255,0,0,200 };
-int NeoGreen[NeoPixelNum] = { 0,255,0,200 };
-int NeoBlue[NeoPixelNum] = { 0,0,255,200 };
+#define colored true
+int NeoStart1[NeoPixelNum] = { 255,   0,   0,   0 };
+int NeoStart2[NeoPixelNum] = {   0, 255,   0,   0 };
+int NeoStart3[NeoPixelNum] = {   0,   0, 255,   0 };
+int NeoStart4[NeoPixelNum] = { 255,   0,   0, 200 };
+int NeoStart5[NeoPixelNum] = {   0, 255,   0, 200 };
+int NeoStart6[NeoPixelNum] = {   0,   0, 255, 200 };
+int NeoNone  [NeoPixelNum] = {   0,   0,   0,   0 };
+
+//int NeoRed[NeoPixelNum] = { 255,0,0,200 };
+//int NeoGreen[NeoPixelNum] = { 0,255,0,200 };
+//int NeoBlue[NeoPixelNum] = { 0,0,255,200 };
 
 //Variablen Display--------------------------------------------------------------------------
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
@@ -41,19 +50,20 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NeoPixelNum, NeoPixelPin, NEO_GRB +
 long lastMessage;
 #define MessageInterval 2000
 long lastPixel;
-/* #define PixelInterval 100
+#define PixelInterval 100
 long lastPressed = 0;
-#define PressedInterval 1500
-long lastDontPress = 0;
-#define DontPressInterval 1500
+#define PressedInterval 500
+//long lastDontPress = 0;
+//#define DontPressInterval 1500
 long lastDisplay = 0;
-#define DisplayInterval 30000
-#define BrightInterval 300 /**/
+#define DisplayInterval 2000
+//#define BrightInterval 300
 
 //Variabeln Network--------------------------------------------------------------------------
 char* SSID = "Buzzer-AP";           // SSID
 char* KEY = "6732987frkubz3458";    // password
 
+bool SendTrue = false;
 IPAddress IP_Master(192, 168, 4, 1);     // IP address of the AP
 String IP_long;
 String IP_short;
@@ -67,10 +77,22 @@ WiFiServer Port_Master(88);
 //----------------------------------------------------------------------------//
 
 void setup() {
-	Prepaere(); // Englisch lernen wir noch XD (prepare)
+	Prepare();
   NeoPixel_Setup();
   Display_Setup();
-  WiFi_Setup();
+	#if (colored == true)
+	NeoPixel_Write( NeoStart1, NeoNone, NeoNone);
+	delay(500);
+	NeoPixel_Write( NeoStart1, NeoStart2, NeoNone);
+	delay(500);
+	NeoPixel_Write( NeoStart1, NeoStart2, NeoStart3);
+	delay(500);
+	NeoPixel_Write( NeoStart4, NeoStart5, NeoStart6);
+	delay(500);
+	#else
+
+	#endif
+	WiFi_Setup();
 	/*NeoPixelColor("RESET", 0);
 	for (int i = 0; i < NeoPixelNum; ++i) {
 		NeoRed[i] = 0;
@@ -89,23 +111,29 @@ void setup() {
 //----------------------------------------------------------------------------//
 
 void loop() {
-	if (digitalRead(button) == LOW) {
-		Display_Write("pressed");
-		NeoPixelColor_Write("BLUE", 255);
-		Serial.println("Pressed");
+	if (digitalRead(BuzzerPin) == LOW) {
+		if ((millis() - lastPressed) >= PressedInterval) {
+			WiFi_Write("BP", "");
+			lastMessage = millis();
+			Display_Write("Pressed");
+			Serial.println("Pressed");
+			NeoPixelColor_Write("BLUE", 255);
+			lastPressed = millis();
+		}
   }
   else {
-		if (WiFi.status() == WL_CONNECTED) {
+		if ((millis() - lastDisplay) >= DisplayInterval){
 			int BatteryCharge = round(analogRead(analogbattery) / 1000.00 * 100);
 			Display_Write("Bat.: " + String(BatteryCharge) + "%");
-    }
+			lastDisplay = millis();
+		}
 	}
 
   if (WiFi.status() != WL_CONNECTED) {
     WiFi_Setup();
   }
 
-	if ((millis() - lastMessage) >= MessageInterval) {
+	if ((millis() - lastMessage) >= MessageInterval && SendTrue == true) {
 		WiFi_Write("SM", "");
 		lastMessage = millis();
 	}
@@ -121,7 +149,13 @@ void loop() {
 		String request = client.readStringUntil('\r');
 		Serial.println("********************************");
 		Serial.println("From the station: " + request);
+		Display_Write(request);
+		lastDisplay = millis();
 		Client.flush();
+
+		if (request == "AC") {
+			SendTrue = true;
+		}
 	}
 }
 
@@ -143,8 +177,8 @@ String getValue(String data, char separator, int index) {
 	return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
-void Prepaere() {  // for pinModes and more .....
-  pinMode(button, INPUT_PULLUP);
+void Prepare() {  // for pinModes and more .....
+  pinMode(BuzzerPin, INPUT_PULLUP);
 	Serial.begin(9600);
 }
 
@@ -153,13 +187,27 @@ void Prepaere() {  // for pinModes and more .....
 //----------------------------------------------------------------------------//
 
 void WiFi_Setup() {
+	Display_Write("Connecting    ...");
   WiFi.mode(WIFI_STA);
 	WiFi.begin(SSID, KEY);           // connects to the WiFi AP
   while (WiFi.status() != WL_CONNECTED) {
 		Serial.print(".");
 		NeoPixelColor_Write("RED", 100);
+		Display_Write("Connecting     ...");
 		delay(500);
+		Display_Write("Connecting    . ..");
+		delay(125);
 		NeoPixelColor_Write("RESET", 0);
+		delay(375);
+		Display_Write("Connecting    .. .");
+		delay(250);
+		NeoPixelColor_Write("RESET", 100);
+		delay(250);
+		Display_Write("Connecting    ... ");
+		delay(375);
+		NeoPixelColor_Write("RESET", 0);
+		delay(125);
+		Display_Write("Connecting    ....");
 		delay(500);
 	}
   IP_long = WiFi.localIP().toString();
@@ -175,8 +223,9 @@ void WiFi_Setup() {
 	Serial.println("IP  Master: " + WiFi.gatewayIP());
 	Serial.println("MAC Master: " + MAC_Master);
 	Port_Master.begin();
-  WiFi_Write("NB", MAC_Master);
+  WiFi_Write("NB", MAC_Address);
   lastMessage = millis();
+	Display_Write("Connected");
 }
 
 void WiFi_Write(String MessageType, String Parameters){
@@ -231,7 +280,7 @@ void Display_Reset() {
 
 void NeoPixel_Setup() {
   pixels.begin(); // This initializes the NeoPixel library.
-  NeoPixel_Write(NeoRed, NeoGreen, NeoBlue);
+  //NeoPixel_Write(NeoRed, NeoGreen, NeoBlue);
 	Serial.println("Pixel aktuell");
 }
 
