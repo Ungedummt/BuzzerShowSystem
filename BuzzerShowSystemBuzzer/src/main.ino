@@ -63,7 +63,8 @@ long lastDisplay = 0;
 char* SSID = "Buzzer-AP";           // SSID
 char* KEY = "6732987frkubz3458";    // password
 
-bool SendTrue = false;
+bool SendAllowed = false;
+bool GameisTrue = true;
 IPAddress IP_Master(192, 168, 4, 1);     // IP address of the AP
 String IP_long;
 String IP_short;
@@ -112,7 +113,7 @@ void setup() {
 
 void loop() {
 	if (digitalRead(BuzzerPin) == LOW) {
-		if ((millis() - lastPressed) >= PressedInterval) {
+		if ((millis() - lastPressed) >= PressedInterval && SendAllowed == true) {
 			WiFi_Write("BP", "");
 			lastMessage = millis();
 			Display_Write("Pressed");
@@ -133,7 +134,7 @@ void loop() {
     WiFi_Setup();
   }
 
-	if ((millis() - lastMessage) >= MessageInterval && SendTrue == true) {
+	if ((millis() - lastMessage) >= MessageInterval && SendAllowed == true) {
 		WiFi_Write("SM", "");
 		lastMessage = millis();
 	}
@@ -154,7 +155,22 @@ void loop() {
 		Client.flush();
 
 		if (request == "AC") {
-			SendTrue = true;
+			SendAllowed = true;
+		}
+		if (request == "AR" && GameisTrue == true) {
+			NeoPixelColor_Write("GREEN", 255);
+		}
+		if (request == "AW" && GameisTrue == true) {
+			NeoPixelColor_Write("RED", 255);
+		}
+		if (request == "GR" && GameisTrue == true) {
+			NeoPixelColor_Write("RESET", 0);
+		}
+		if (request == "GB" && GameisTrue == false) {
+			GameisTrue = false;
+		}
+		if (request == "GS" && GameisTrue == true) {
+			GameisTrue = false;
 		}
 	}
 }
