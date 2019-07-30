@@ -1,4 +1,7 @@
-//Includes-----------------------------------------------------------------------------------
+//----------------------------------------------------------------------------//
+//-------------------------------Includes-------------------------------------//
+//----------------------------------------------------------------------------//
+
 #include <ESP8266WiFi.h>
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
@@ -9,15 +12,22 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-//Variabeln I/O------------------------------------------------------------------------------
+//----------------------------------------------------------------------------//
+//-----------------------------Variables I/O----------------------------------//
+//----------------------------------------------------------------------------//
+
 #define analogbattery A0
 // SCL = D1
 // SDA = D2
 #define NeoPixelPin D3
 #define BuzzerPin D4
 
+//----------------------------------------------------------------------------//
+//-----------------------------Variables NeoPixel-----------------------------//
+//----------------------------------------------------------------------------//
+
 #define NeoPixelNum  4
-#define colored true
+#define StartColored true
 int NeoStart1[NeoPixelNum] = { 255,   0,   0,   0 };
 int NeoStart2[NeoPixelNum] = {   0, 255,   0,   0 };
 int NeoStart3[NeoPixelNum] = {   0,   0, 255,   0 };
@@ -30,7 +40,10 @@ int NeoNone  [NeoPixelNum] = {   0,   0,   0,   0 };
 //int NeoGreen[NeoPixelNum] = { 0,255,0,200 };
 //int NeoBlue[NeoPixelNum] = { 0,0,255,200 };
 
-//Variablen Display--------------------------------------------------------------------------
+//----------------------------------------------------------------------------//
+//--------------------------------Variables Display---------------------------//
+//----------------------------------------------------------------------------//
+
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
 #define NUMFLAKES 10
@@ -45,8 +58,9 @@ int NeoNone  [NeoPixelNum] = {   0,   0,   0,   0 };
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NeoPixelNum, NeoPixelPin, NEO_GRB + NEO_KHZ800);
 
-//Variabeln Sonstige-------------------------------------------------------------------------
-#define type B
+//----------------------------------------------------------------------------//
+//----------------------------Variables Millis--------------------------------//
+//----------------------------------------------------------------------------//
 long lastMessage;
 #define MessageInterval 2000
 long lastPixel;
@@ -59,11 +73,16 @@ long lastDisplay = 0;
 #define DisplayInterval 2000
 //#define BrightInterval 300
 
-//Variabeln Network--------------------------------------------------------------------------
+//----------------------------------------------------------------------------//
+//--------------------------Variabeln Network---------------------------------//
+//----------------------------------------------------------------------------//
+
 char* SSID = "Buzzer-AP";           // SSID
 char* KEY = "6732987frkubz3458";    // password
 
-bool SendTrue = false;
+bool SendAllowed = false;
+bool GameisTrue = false;
+bool AnswerTrue = false;
 IPAddress IP_Master(192, 168, 4, 1);     // IP address of the AP
 String IP_long;
 String IP_short;
@@ -113,12 +132,15 @@ void setup() {
 void loop() {
 	if (digitalRead(BuzzerPin) == LOW) {
 		if ((millis() - lastPressed) >= PressedInterval) {
-			WiFi_Write("BP", "");
-			lastMessage = millis();
 			Display_Write("Pressed");
 			Serial.println("Pressed");
-			NeoPixelColor_Write("BLUE", 255);
-			lastPressed = millis();
+			lastDisplay = millis();
+			if (SendAllowed && GameisTrue) {
+				NeoPixelColor_Write("BLUE", 255);
+				lastPressed = millis();
+				WiFi_Write("BP", "");
+				lastMessage = millis();
+			}
 		}
   }
   else {
@@ -133,7 +155,7 @@ void loop() {
     WiFi_Setup();
   }
 
-	if ((millis() - lastMessage) >= MessageInterval && SendTrue == true) {
+	if ((millis() - lastMessage) >= MessageInterval && SendAllowed == true) {
 		WiFi_Write("SM", "");
 		lastMessage = millis();
 	}
@@ -149,12 +171,31 @@ void loop() {
 		String request = client.readStringUntil('\r');
 		Serial.println("********************************");
 		Serial.println("From the station: " + request);
-		Display_Write(request);
+		Display_Write("Msg.: " + request);
 		lastDisplay = millis();
 		Client.flush();
 
 		if (request == "AC") {
-			SendTrue = true;
+			SendAllowed = true;
+		}
+		if (request == "AR" && GameisTrue && !AnswerTrue) {
+			NeoPixelColor_Write("GREEN", 255);
+			AnswerTrue = true;
+		}
+		if (request == "AW" && GameisTrue && !AnswerTrue) {
+			NeoPixelColor_Write("RED", 255);
+			AnswerTrue = true;
+		}
+		if (request == "GR" && GameisTrue) {
+			NeoPixelColor_Write("RESET", 0);
+		}
+		if (request == "GB" && GameisTrue == false) {
+			GameisTrue = true;
+			SendAllowed = true;
+		}
+		if (request == "GS" && GameisTrue) {
+			GameisTrue = false;
+			AnswerTrue = false;
 		}
 	}
 }
@@ -191,24 +232,28 @@ void WiFi_Setup() {
   WiFi.mode(WIFI_STA);
 	WiFi.begin(SSID, KEY);           // connects to the WiFi AP
   while (WiFi.status() != WL_CONNECTED) {
-		Serial.print(".");
-		NeoPixelColor_Write("RED", 100);
-		Display_Write("Connecting     ...");
-		delay(500);
-		Display_Write("Connecting    . ..");
-		delay(125);
-		NeoPixelColor_Write("RESET", 0);
-		delay(375);
-		Display_Write("Connecting    .. .");
-		delay(250);
-		NeoPixelColor_Write("RESET", 100);
-		delay(250);
-		Display_Write("Connecting    ... ");
-		delay(375);
-		NeoPixelColor_Write("RESET", 0);
-		delay(125);
-		Display_Write("Connecting    ....");
-		delay(500);
+		if (WiFi.status() != WL_CONNECTED) {
+			Serial.print(".");
+			NeoPixelColor_Write("RED", 100);
+			Display_Write("Connecting     ...");
+			delay(500);
+			Display_Write("Connecting    . ..");
+			delay(125);
+			NeoPixelColor_Write("RESET", 0);
+			delay(375);
+			Display_Write("Connecting    .. .");
+			delay(250);
+			NeoPixelColor_Write("RESET", 100);
+		}
+		if (WiFi.status() != WL_CONNECTED) {
+			delay(250);
+			Display_Write("Connecting    ... ");
+			delay(375);
+			NeoPixelColor_Write("RESET", 0);
+			delay(125);
+			Display_Write("Connecting    ....");
+			delay(500);
+		}
 	}
   IP_long = WiFi.localIP().toString();
   IP_short = getValue(IP_long, '.', 3);
@@ -216,6 +261,8 @@ void WiFi_Setup() {
   MAC_Master = WiFi.BSSIDstr();
 	Serial.println();
 	Serial.println("Connected");
+	Display_Write("Connected");
+	lastDisplay = millis();
 	Serial.println("station_bare_01.ino");
 	Serial.println("LocalIP: " + IP_long);
   Serial.println("LocalID: " + IP_short);
@@ -225,7 +272,6 @@ void WiFi_Setup() {
 	Port_Master.begin();
   WiFi_Write("NB", MAC_Address);
   lastMessage = millis();
-	Display_Write("Connected");
 }
 
 void WiFi_Write(String MessageType, String Parameters){
@@ -282,6 +328,19 @@ void NeoPixel_Setup() {
   pixels.begin(); // This initializes the NeoPixel library.
   //NeoPixel_Write(NeoRed, NeoGreen, NeoBlue);
 	Serial.println("Pixel aktuell");
+	/*NeoPixelColor_Write("PURPLE", 255);
+	delay(1000);
+	NeoPixelColor_Write("AQUA", 255);
+	delay(1000);
+	NeoPixelColor_Write("YELLOW", 255);
+	delay(1000);
+	NeoPixelColor_Write("BLUE", 255);
+	delay(1000);
+	NeoPixelColor_Write("RED", 255);
+	delay(1000);
+	NeoPixelColor_Write("GREEN", 255);
+	delay(1000);
+	/**/
 }
 
 void NeoPixel_Write(int Red[NeoPixelNum], int Green[NeoPixelNum], int Blue[NeoPixelNum]) {
@@ -323,5 +382,26 @@ void NeoPixelColor_Write(String color, int brightness) {
 			BLUE[i] = brightness;
 		}
 		NeoPixel_Write(NONE, NONE, BLUE);
+	}
+	if (color == "YELLOW") {
+		for (int i = 0; i < NeoPixelNum; i++) {
+			RED[i] = brightness/2;
+			GREEN[i] = brightness/2;
+		}
+		NeoPixel_Write(RED, GREEN, NONE);
+	}
+	if (color == "PURPLE") {
+		for (int i = 0; i < NeoPixelNum; i++) {
+			RED[i] = brightness/2;
+			BLUE[i] = brightness/2;
+		}
+		NeoPixel_Write(RED, NONE, BLUE);
+	}
+	if (color == "AQUA") {
+		for (int i = 0; i < NeoPixelNum; i++) {
+			BLUE[i] = brightness/2;
+			GREEN[i] = brightness/2;
+		}
+		NeoPixel_Write(NONE, GREEN, BLUE);
 	}
 }
