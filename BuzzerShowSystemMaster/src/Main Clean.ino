@@ -46,7 +46,7 @@ char* SSID = "Buzzer-AP";           // SSID
 char* KEY = "6732987frkubz3458";    // password
 #define CHANNEL 1
 #define HIDDEN true
-int max_connection = 0;
+int max_connection = 1;
 int ClientNum = 0;
 
 //Komunikation
@@ -68,7 +68,13 @@ void setup() {
 //===========================================================================================
 
 void loop() {
-  TheGameMaster();
+  MessageReacting(); //Hier werden Nachricheten ausgelesen und verwertet
+  DeviceHandler();
+  char SerRead = Serial.read();
+  if (SerRead == 'A') {
+    WiFi_Write("Leben heist veränderung", 100);
+  }
+  SerRead = NULL;
 }
 
 //===========================================================================================
@@ -100,15 +106,9 @@ Serial.println("MAC:" + WiFi.softAPmacAddress());
 //===========================================================================================
 
 void WelcomeMessage(){
-  Serial.println("Welcome to the Serial-Monitor of the BuzzerShowSystem"):
+  Serial.println("Welcome to the Serial-Monitor of the BuzzerShowSystem");
   Serial.println("here you will see all the important things that are");
   Serial.println("happening in the background");
-}
-
-//===========================================================================================
-
-void TheGameMaster(){
-DeviceHandler();
 }
 
 //===========================================================================================
@@ -119,43 +119,62 @@ void BuzzerHandler(String Action, String Who){  //Sorgt dafir das die Buzzer ver
 
 //===========================================================================================
 
-String MessageReciever(String Message){
-
+String WiFi_Read(){
+request = "";
+WiFiClient client = APServerPort.available();
+if (client) {
+  request = client.readStringUntil('\r');
+  client.flush();
+}
+return request;
 }
 
 //===========================================================================================
 
 void MessageReacting(){
-  MessageReciever();
+    String Message = WiFi_Read();
+  if(Message != ""){
+    Serial.println(Message);
+  }
 }
 
-void MessageTransmitter(String Message, int ID){
-
+void WiFi_Write(String Message, int ID){
+IPAddress ClientServerAddress(192, 168, 4, ID);
+  APclient.connect(ClientServerAddress, 88);
+  APclient.print(Message + "\r");
+  Serial.print("Send: ");
+  Serial.println(Message + '\r');
+  Serial.print(" / To: ");
+  Serial.println(ID);
 }
 
 //===========================================================================================
 
-void DeviceHandler(){       //Sorgt dafür das sich Geräte Verbinden und Vebunden Bleiben
-DeviceTimeout();
+void DeviceHandler(){       //Sorgt dafür das sich Geräte Verbinden und Vebunden Bleiben (TimeOut)
+
 }
 
 //===========================================================================================
-
-void DeviceTimeout(){       //Sorgt dafür das Geräte die nicht mehr Verbunden sind auch nicht mehr Angezeigt werden
-
-}
 
 void AddDevice(){           //Solte ein timeout beinhalten
 
 }
 
+//===========================================================================================
+
+
 void LedHandler(String LedName, String Effect){
 
 }
 
+//===========================================================================================
+
+
 void AnalogButtonsHandler(){
 
 }
+
+//===========================================================================================
 
 void DataSync(){            //Sorgt dafür das alle Geräte die Neusten Configs haben
 
