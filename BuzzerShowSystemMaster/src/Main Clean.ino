@@ -1,6 +1,26 @@
 #include <ESP8266WiFi.h>
 
 //Variabeln I/O------------------------------------------------------------------------------
+
+//Short Codes to Buzzers and Effects
+//Buzzer Accepted == BA
+//Buzzer Dennied  == BD
+//Game Begin      == GB
+//Game Stop       == GS
+//Game Reset      == GR
+//Answer Right    == AR
+//Answer Wrong    == AW
+
+//Short Codes from Buzzers
+//New Buzzer      == NB
+//Status Message  == SM
+//Buzzer Pressed  == BP
+
+//Short Codes from Effect
+//New Effect      == NE
+//Status Message  == SM
+
+
 //Buttons Ranges
 int AddBuzzerButtonRange[2]{825,828};
 int ResetGameButtonRange[2]{845,846};
@@ -28,7 +48,7 @@ int IPArray [MaxClients] = {};
 int TimeArray [MaxClients] = {};
 String TypeArray [MaxClients] = {};
 String MacArray [MaxClients] = {};
-String AcceptedMacsArray [MaxClients] = {"3C:71:BF:3A:0F:93","3C:71:BF:39:B2:78"};
+String AcceptedMacsArray [MaxClients] = {"3C:71:BF:3A:0F:93","3C:71:BF:39:B2:78","DC:4F:22:60:6E:0B"};
 
 
 //Sonstiges
@@ -42,6 +62,7 @@ float millis_;
 float millisOld;
 float Time;
 String request;
+int BuzzerPressed = 0;
 
 //Network Variabeln--------------------------------------------------------------------------
 char* SSID = "Buzzer-AP";           // SSID
@@ -87,11 +108,21 @@ void loop() {
   }
 
 
+
+
 //Nachricht in einzelne Variabeln aufteilen
   String DeviceMAC = getValue(Message, ';', 2);
   String DeviceID = getValue(Message, ';', 1);
   String MessageType = getValue(Message, ';', 0);
   int IDasInt = DeviceID.toInt();
+
+  if(BuzzerPressed == 0){
+
+   if(MessageType == "BP"){
+    BuzzerPressed = 1;
+    WiFi_Write("PA", IDasInt);
+        }
+        }
 
 //Nachricht Verwerten
   if(MessageType == "NB" || MessageType == "NE"){
@@ -106,8 +137,8 @@ void loop() {
         i++;
       }
   }
-
-  if(MessageType = "SM"){
+//Timeout von Client erneuern wenn er die Status Message (SM) Sendet
+  if(MessageType == "SM"){
       for(int i = 0; i < ClientNum ;){
          if(IDasInt == IPArray[i]){
           TimeArray[i] = requestTime;
@@ -117,26 +148,20 @@ void loop() {
         }
 
   char SerRead = Serial.read();
-  if (SerRead == 'A') {
-    WiFi_Write("AR", 101);
+   if (SerRead == 'G') {
+    VIP_WiFi_Write("GB");
   }
-  if (SerRead == 'B') {
-    WiFi_Write("AW", 101);
+  if (SerRead == 'R') {
+    VIP_WiFi_Write("AR");
+  }
+  if (SerRead == 'W') {
+    VIP_WiFi_Write("AW");
+  }
+  if (SerRead == 'Z') {
+    VIP_WiFi_Write("GR");
+    BuzzerPressed = 0;
   }
 
-  if (SerRead == 'C') {
-    WiFi_Write("AR", 100);
-  }
-  if (SerRead == 'D') {
-    WiFi_Write("AW", 100);
-  }
-
-   if (SerRead == '0') {
-    WiFi_Write("GB", 100);
-  }
-  if (SerRead == '1') {
-    WiFi_Write("GB", 101);
-  }
 
 
   SerRead = NULL;
@@ -214,6 +239,23 @@ IPAddress ClientServerAddress(192, 168, 4, ID);
   Serial.println(Message + '\r');
   Serial.print(" / To: ");
   Serial.println(ID);
+}
+
+void VIP_WiFi_Write(String Message){
+  String CurrentDeviceMAC;
+  int CurrentID;
+  for (int CM = 0; CM < ClientNum;) {
+          CurrentDeviceMAC = AcceptedMacsArray[CM];
+       for (int i = 0; i < MaxClients;) {
+        if (CurrentDeviceMAC == AcceptedMacsArray[i]) {
+          CurrentID = (IPArray[CM]);
+          WiFi_Write(Message, CurrentID);//This Code Accepts the Buzzer and requests his messages
+          i = MaxClients;
+        }
+        i++;
+      }
+      CM++;
+  }
 }
 
 //===========================================================================================
