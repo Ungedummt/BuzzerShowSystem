@@ -66,7 +66,7 @@ long lastMessage;
 long lastPixel;
 #define PixelInterval 100
 long lastPressed = 0;
-#define PressedInterval 500
+#define PressedInterval 1000
 //long lastDontPress = 0;
 //#define DontPressInterval 1500
 long lastDisplay = 0;
@@ -82,7 +82,7 @@ char* KEY = "6732987frkubz3458";    // password
 
 bool SendAllowed = false;
 bool GameisTrue = false;
-bool AnswerTrue = false;
+//bool AnswerTrue = false;
 IPAddress IP_Master(192, 168, 4, 1);     // IP address of the AP
 String IP_long;
 String IP_short;
@@ -135,11 +135,10 @@ void loop() {
 			Display_Write("Pressed");
 			Serial.println("Pressed");
 			lastDisplay = millis();
-			if (SendAllowed && GameisTrue && !AnswerTrue) {
-				NeoPixelColor_Write("BLUE", 255);
-				lastPressed = millis();
+			if (SendAllowed && GameisTrue) {// && !AnswerTrue) {
 				WiFi_Write("BP", "");
 				lastMessage = millis();
+				lastPressed = millis();
 			}
 		}
   }
@@ -181,19 +180,20 @@ void loop() {
 		if (request == "DE") {
 			SendAllowed = false;
 			GameisTrue = false;
-			AnswerTrue = false;
+			//AnswerTrue = false;
 
 		}
-		if (request == "AR" && GameisTrue && !AnswerTrue) {
+		if (request == "AR" && GameisTrue) {// && !AnswerTrue) {
 			NeoPixelColor_Write("GREEN", 255);
-			AnswerTrue = true;
+			//AnswerTrue = true;
 		}
-		if (request == "AW" && GameisTrue && !AnswerTrue) {
+		if (request == "AW" && GameisTrue) {//&& !AnswerTrue) {
 			NeoPixelColor_Write("RED", 255);
-			AnswerTrue = true;
+			//AnswerTrue = true;
 		}
 		if (request == "GR" && GameisTrue) {
 			NeoPixelColor_Write("RESET", 0);
+			//AnswerTrue = false;
 		}
 		if (request == "GB" && GameisTrue == false) {
 			GameisTrue = true;
@@ -201,7 +201,10 @@ void loop() {
 		}
 		if (request == "GS" && GameisTrue) {
 			GameisTrue = false;
-			AnswerTrue = false;
+			//AnswerTrue = false;
+		}
+		if (request == "PA") {
+			NeoPixelColor_Write("BLUE", 255);
 		}
 	}
 }
