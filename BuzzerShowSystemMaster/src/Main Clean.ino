@@ -49,6 +49,7 @@ int TimeArray [MaxClients] = {};
 String TypeArray [MaxClients] = {};
 String MacArray [MaxClients] = {};
 String AcceptedMacsArray [MaxClients] = {"3C:71:BF:3A:0F:93","3C:71:BF:39:B2:78","DC:4F:22:60:6E:0B"};
+String CurrentGameMacsArray [MaxClients] = {"3C:71:BF:3A:0F:93","3C:71:BF:39:B2:78","DC:4F:22:60:6E:0B"};
 
 
 //Sonstiges
@@ -71,6 +72,7 @@ char* KEY = "6732987frkubz3458";    // password
 #define HIDDEN true
 int max_connection = MaxClients;
 int ClientNum = 0;
+int DispClientNum = 0; //Dies ist die Tatsächliche anzahl an verbundenen Geräten
 
 //Komunikation
 WiFiServer APServerPort(80);
@@ -281,6 +283,7 @@ void DeviceHandler(){       //Sorgt dafür das sich Geräte Verbinden und Vebund
         }
         Serial.println("point4");
         ClientNum = ClientNum - 1;
+        DispClientNum = DispClientNum - 1;
         Serial.print("ClientNum");
         Serial.println(ClientNum);
         float TIME = millis();
@@ -311,7 +314,7 @@ void AddDevice(String DeviceType, int DeviceID, String DeviceMAC){           //S
         MacArray[x] = MacArray[x + 1];
         x++;
       }
-      ClientNum = ClientNum - 1;
+      ClientNum = ClientNum - 1; DispClientNum = DispClientNum - 1;
       Serial.print("ClientNum");
         Serial.println(ClientNum);
     }
@@ -328,7 +331,7 @@ void AddDevice(String DeviceType, int DeviceID, String DeviceMAC){           //S
   MacArray[ClientNum] = DeviceMAC;
   TypeArray[ClientNum] = DeviceType;
   TimeArray[ClientNum] = requestTime;
-  ClientNum = ClientNum + 1;
+  ClientNum = ClientNum + 1; DispClientNum = DispClientNum + 1;
   Serial.print("ClientNum");
         Serial.println(ClientNum);
   ArrayDebug_function(IPArray);
