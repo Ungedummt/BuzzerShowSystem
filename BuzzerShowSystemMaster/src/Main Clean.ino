@@ -57,7 +57,7 @@ long requestTime = 0;
 String type;
 String ip;
 boolean finish;
-boolean GamesState;
+boolean GameState;
 int MasterAnswer; //0 = nichts / 1 = Richtig / 2 = Falsch
 float millis_;
 float millisOld;
@@ -131,9 +131,19 @@ void loop() {
       //Überprüft ob die Mac Zu den zugelassenen Macs gehört
       for (int i = 0; i < MaxClients;) {
         if (DeviceMAC == AcceptedMacsArray[i]) {
-          Serial.println("Buzzer Zugelassen");
+          if(GameState == 0){
+            WiFi_Write("AC", IDasInt);//This Code Accepts the Buzzer and requests his messages
+            AddDevice(MessageType, IDasInt, DeviceMAC);
+          }
+          for (int E = 0; E < ClientNum;) {
+          if (IDasInt == IPArray[E] && GameState == 1) {
           WiFi_Write("AC", IDasInt);//This Code Accepts the Buzzer and requests his messages
+          WiFi_Write("GB", IDasInt);
           AddDevice(MessageType, IDasInt, DeviceMAC);
+          }
+          E++;
+          }
+
           i = MaxClients;
         }
         i++;
@@ -148,10 +158,23 @@ void loop() {
         i++;
         }
         }
+      if(GameState == 1){
+        for(int i = 0; i < ClientNum ;){
+         if(TypeArray[i] == "DB"){
+          TimeArray[i] = requestTime;
+         }
+        i++;
+        }
+       }
 
   char SerRead = Serial.read();
    if (SerRead == 'G') {
     VIP_WiFi_Write("GB");
+    GameState = 1;
+  }
+  if (SerRead == 'S') {
+    VIP_WiFi_Write("GS");
+    GameState = 0;
   }
   if (SerRead == 'R') {
     VIP_WiFi_Write("AR");
@@ -247,7 +270,8 @@ void VIP_WiFi_Write(String Message){
   String CurrentDeviceMAC;
   int CurrentID;
   for (int CM = 0; CM < ClientNum;) {
-          CurrentDeviceMAC = AcceptedMacsArray[CM];
+    CurrentDeviceMAC = AcceptedMacsArray[CM];
+    if(TypeArray[CM] != "DB"){
        for (int i = 0; i < MaxClients;) {
         if (CurrentDeviceMAC == AcceptedMacsArray[i]) {
           CurrentID = (IPArray[CM]);
@@ -256,6 +280,7 @@ void VIP_WiFi_Write(String Message){
         }
         i++;
       }
+    }
       CM++;
   }
 }
@@ -267,12 +292,13 @@ void DeviceHandler(){       //Sorgt dafür das sich Geräte Verbinden und Vebund
   if (ClientNum > 0) {
     for (int i = 0; i < ClientNum;) {
       //Serial.println((requestTime - TimeArray[ClientNum]));
-      if ((requestTime - TimeArray[i]) > 10) {
+      if ((requestTime - TimeArray[i]) > 5) {
         Serial.println("");
         Serial.print("Geräte Timeout: IP: ");
         Serial.print(IPArray[i]);
         Serial.print(" /  Type: ");
-        Serial.print("Buzzer");
+        Serial.println("Buzzer");
+        if(GameState == 0){
         for (int x = i; x < ClientNum;) {
           //Alle werte Zurückrüken
           IPArray[x] = IPArray[i + 1];
@@ -281,18 +307,24 @@ void DeviceHandler(){       //Sorgt dafür das sich Geräte Verbinden und Vebund
           MacArray[x] = MacArray[x + 1];
           x++;
         }
-        Serial.println("point4");
         ClientNum = ClientNum - 1;
+        }
+        if(GameState == 1){
+        TypeArray[i] = "DB";
+        }
+        if(DispClientNum > 0){
         DispClientNum = DispClientNum - 1;
+        }
         Serial.print("ClientNum");
         Serial.println(ClientNum);
+        Serial.print("DispClientNum");
+        Serial.println(DispClientNum);
         float TIME = millis();
         float TIME_ = millis();
         if ((TIME_ - TIME) >= 1000) {
           int minus = round((TIME_ - TIME) / 1000);
           requestTime = requestTime - minus;
         }
-        Serial.print("point5");
       }
       i++;
     }
@@ -303,22 +335,33 @@ void DeviceHandler(){       //Sorgt dafür das sich Geräte Verbinden und Vebund
 //===========================================================================================
 
 void AddDevice(String DeviceType, int DeviceID, String DeviceMAC){           //Solte ein timeout beinhalten
+  int ExtistingDevicePosition;
+  for (int E = 0; E <= ClientNum;) {
+    if (DeviceID == IPArray[E] || GameState == 0) {
 //Überprüft ob die ID bereits exestriert
   for (int i = 0; i < ClientNum;) {
     if (DeviceID == IPArray[i]) {
+      ExtistingDevicePosition = i;
+      if(GameState == 0){
       for (int x = i; x < ClientNum;) {
         //Alle werte Zurückrüken
         IPArray[x] = IPArray[i + 1];
         TimeArray[x] = TimeArray[x + 1];
         TypeArray[x] = TypeArray[i + 1];
         MacArray[x] = MacArray[x + 1];
+
         x++;
       }
-      ClientNum = ClientNum - 1; DispClientNum = DispClientNum - 1;
-      Serial.print("ClientNum");
+      ClientNum = ClientNum - 1;
+      DispClientNum = DispClientNum - 1; //Könnte hier falsch sein
+      }
+        Serial.print("ClientNum");
         Serial.println(ClientNum);
-    }
-    i++;
+        Serial.print("DislpClientNum");
+        Serial.println(DispClientNum);
+
+  }
+  i++;
   }
 
   Serial.println("Neuer Buzzer angemeldet");
@@ -327,13 +370,26 @@ void AddDevice(String DeviceType, int DeviceID, String DeviceMAC){           //S
   }
   if(DeviceType == "NB"){DeviceType = "B";}
   if(DeviceType == "NE"){DeviceType = "E";}
+  if(GameState == 0){
   IPArray[ClientNum] = DeviceID;
   MacArray[ClientNum] = DeviceMAC;
   TypeArray[ClientNum] = DeviceType;
   TimeArray[ClientNum] = requestTime;
-  ClientNum = ClientNum + 1; DispClientNum = DispClientNum + 1;
+  }
+  if(GameState == 1){
+  IPArray[ExtistingDevicePosition] = DeviceID;
+  MacArray[ExtistingDevicePosition] = DeviceMAC;
+  TypeArray[ExtistingDevicePosition] = DeviceType;
+  TimeArray[ExtistingDevicePosition] = requestTime;
+  }
+  if(GameState == 0){
+  ClientNum = ClientNum + 1;
+  }
+  DispClientNum = DispClientNum + 1;
   Serial.print("ClientNum");
         Serial.println(ClientNum);
+        Serial.print("DislpClientNum");
+        Serial.println(DispClientNum);
   ArrayDebug_function(IPArray);
 
 
@@ -352,6 +408,9 @@ void AddDevice(String DeviceType, int DeviceID, String DeviceMAC){           //S
       ArrayDebug_function(TimeArray);
   //GeräteTimeoutRefresh Ende--------------------------------------------------------------------
   }
+  ++E;
+  }
+}
 
 
 //===========================================================================================
