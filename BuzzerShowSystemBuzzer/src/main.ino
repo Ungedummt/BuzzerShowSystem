@@ -63,6 +63,8 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NeoPixelNum, NeoPixelPin, NEO_GRB +
 //----------------------------------------------------------------------------//
 long lastMessage;
 #define MessageInterval 2000
+long FirstMessage;
+#define FirstInterval 5000
 long lastPixel;
 #define PixelInterval 100
 long lastPressed = 0;
@@ -82,6 +84,7 @@ char* KEY = "6732987frkubz3458";    // password
 
 bool SendAllowed = false;
 bool GameisTrue = false;
+bool PressedTrue = false;
 //bool AnswerTrue = false;
 IPAddress IP_Master(192, 168, 4, 1);     // IP address of the AP
 String IP_long;
@@ -139,6 +142,7 @@ void loop() {
 				WiFi_Write("BP", "");
 				lastMessage = millis();
 				lastPressed = millis();
+				PressedTrue = true;
 			}
 		}
   }
@@ -159,6 +163,11 @@ void loop() {
 		lastMessage = millis();
 	}
 
+	if (!SendAllowed && (FirstMessage + FirstInterval) <= millis()) {
+		WiFi_Write("NB", MAC_Address);
+		FirstMessage = millis();
+	}
+
 	// Use WiFiClient class to create TCP connections
 	//if((millis() - lastPixel) >= PixelInterval){
 	  //NeoPixel(NeoRed, NeoGreen, NeoBlue);
@@ -177,34 +186,36 @@ void loop() {
 		if (request == "AC") {
 			SendAllowed = true;
 		}
-		if (request == "DE") {
-			SendAllowed = false;
-			GameisTrue = false;
-			//AnswerTrue = false;
-
-		}
-		if (request == "AR" && GameisTrue) {// && !AnswerTrue) {
-			NeoPixelColor_Write("GREEN", 255);
-			//AnswerTrue = true;
-		}
-		if (request == "AW" && GameisTrue) {//&& !AnswerTrue) {
-			NeoPixelColor_Write("RED", 255);
-			//AnswerTrue = true;
-		}
-		if (request == "GR" && GameisTrue) {
-			NeoPixelColor_Write("RESET", 0);
-			//AnswerTrue = false;
-		}
-		if (request == "GB" && GameisTrue == false) {
-			GameisTrue = true;
-			SendAllowed = true;
-		}
-		if (request == "GS" && GameisTrue) {
-			GameisTrue = false;
-			//AnswerTrue = false;
-		}
-		if (request == "PA") {
-			NeoPixelColor_Write("BLUE", 255);
+		if (SendAllowed) {
+			if (request == "DE") {
+				SendAllowed = false;
+				GameisTrue = false;
+				//AnswerTrue = false;
+			}
+			if (request == "AR" && GameisTrue) {// && !AnswerTrue) {
+				NeoPixelColor_Write("GREEN", 255);
+				//AnswerTrue = true;
+			}
+			if (request == "AW" && GameisTrue) {//&& !AnswerTrue) {
+				NeoPixelColor_Write("RED", 255);
+				//AnswerTrue = true;
+			}
+			if (request == "GR" && GameisTrue) {
+				NeoPixelColor_Write("RESET", 0);
+				PressedTrue = false;
+				//AnswerTrue = false;
+			}
+			if (request == "GB" && GameisTrue == false) {
+				GameisTrue = true;
+			}
+			if (request == "GS" && GameisTrue) {
+				GameisTrue = false;
+				//AnswerTrue = false;
+			}
+			if (request == "PA" && GameisTrue && PressedTrue) {
+				NeoPixelColor_Write("BLUE", 255);
+				PressedTrue = true;
+			}
 		}
 	}
 }
@@ -230,6 +241,7 @@ String getValue(String data, char separator, int index) {
 void Prepare() {  // for pinModes and more .....
   pinMode(BuzzerPin, INPUT_PULLUP);
 	Serial.begin(9600);
+	Serial.println("\n");
 }
 
 //----------------------------------------------------------------------------//
@@ -237,9 +249,15 @@ void Prepare() {  // for pinModes and more .....
 //----------------------------------------------------------------------------//
 
 void WiFi_Setup() {
-	Display_Write("Connecting    ...");
-  WiFi.mode(WIFI_STA);
-	WiFi.begin(SSID, KEY);           // connects to the WiFi AP
+	if (WiFi.status() != WL_CONNECTED) {
+		SendAllowed = false;
+		GameisTrue = false;
+		PressedTrue = false;
+		//AnswerTrue = false;
+		Display_Write("Connecting    ...");
+	  WiFi.mode(WIFI_STA);
+		WiFi.begin(SSID, KEY);           // connects to the WiFi AP
+	}
   while (WiFi.status() != WL_CONNECTED) {
 		if (WiFi.status() != WL_CONNECTED) {
 			Serial.print(".");
@@ -272,14 +290,14 @@ void WiFi_Setup() {
 	Serial.println("Connected");
 	Display_Write("Connected");
 	lastDisplay = millis();
-	Serial.println("station_bare_01.ino");
+	Serial.println("buzzer.ino");
 	Serial.println("LocalIP: " + IP_long);
   Serial.println("LocalID: " + IP_short);
 	Serial.println("MAC: " + MAC_Address);
-	Serial.println("IP  Master: " + WiFi.gatewayIP());
 	Serial.println("MAC Master: " + MAC_Master);
 	Port_Master.begin();
   WiFi_Write("NB", MAC_Address);
+	FirstMessage = millis();
   lastMessage = millis();
 }
 
@@ -368,10 +386,7 @@ void NeoPixelColor_Write(String color, int brightness) {
 	for (int i = 0; i < NeoPixelNum; ++i) {
 		NONE[i] = 0;
 	}
-	if (brightness == 0) {
-		NeoPixel_Write(NONE, NONE, NONE);
-	}
-	if (color == "RESET") {
+	if (color == "RESET" || brightness == 0) {
 		NeoPixel_Write(NONE, NONE, NONE);
 	}
 	if (color == "RED") {
