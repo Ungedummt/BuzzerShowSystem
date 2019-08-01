@@ -165,7 +165,6 @@ void DMX_LampColor(int Lamp, int BRGBWPosition[5], String color, int brightness)
 void DMX_Update() {
 	if ((millis() - lastDMX) >= DMXInterval) {
 		DMX_Send();
-		dmx.update();
 		lastDMX = millis();
 	}
 }
@@ -214,6 +213,14 @@ void Prepare() {  // for pinModes and more .....
 	Serial.begin(9600);
 }
 
+void wait(int time) {
+	long start = millis();
+	while ((start + time) >= millis()) {
+		DMX_Update();
+		delay(20);
+	}
+}
+
 //----------------------------------------------------------------------------//
 //---------------------------------WiFi---------------------------------------//
 //----------------------------------------------------------------------------//
@@ -223,7 +230,12 @@ void WiFi_Setup() {
 	WiFi.begin(SSID, KEY);           // connects to the WiFi AP
   while (WiFi.status() != WL_CONNECTED) {
 		Serial.print(".");
-		delay(1000);
+		DMX_LampColor(1, BRGBWChannelpostition, "RED", 255);
+		DMX_LampColor(2, BRGBWChannelpostition, "RESET", 255);
+		wait(500);
+		DMX_LampColor(2, BRGBWChannelpostition, "RED", 255);
+		DMX_LampColor(1, BRGBWChannelpostition, "RESET", 255);
+		wait(500);
 	}
   IP_long = WiFi.localIP().toString();
   IP_short = getValue(IP_long, '.', 3);
