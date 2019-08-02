@@ -64,6 +64,8 @@ float millisOld;
 float Time;
 String request;
 int BuzzerPressed = 0;
+long BuzzerPressedTime = 0;
+float toLate = 0.00;
 
 //Network Variabeln--------------------------------------------------------------------------
 char* SSID = "Buzzer-AP";           // SSID
@@ -118,11 +120,18 @@ void loop() {
   String MessageType = getValue(Message, ';', 0);
   int IDasInt = DeviceID.toInt();
 
-  if(BuzzerPressed == 0){
+
 
    if(MessageType == "BP"){
+   if(BuzzerPressed == 0){
     BuzzerPressed = 1;
+    BuzzerPressedTime = millis();
     WiFi_Write("PA", IDasInt);
+        }else{
+          toLate = ((millis() - BuzzerPressedTime) / 1000.00);
+          Serial.print(toLate,3);
+          Serial.println(" Seconds to late ;) - " + DeviceID);
+          WiFi_Write((String(toLate,3) + " Sec to late"), IDasInt);
         }
         }
 
@@ -150,7 +159,7 @@ void loop() {
       }
   }
 //Timeout von Client erneuern wenn er die Status Message (SM) Sendet
-  if(MessageType == "SM"){
+  if(IDasInt){
       for(int i = 0; i < ClientNum ;){
          if(IDasInt == IPArray[i]){
           TimeArray[i] = requestTime;
@@ -175,6 +184,7 @@ void loop() {
   if (SerRead == 'S') {
     VIP_WiFi_Write("GS");
     GameState = 0;
+    BuzzerPressedTime = 0;
   }
   if (SerRead == 'R') {
     VIP_WiFi_Write("AR");
@@ -185,6 +195,7 @@ void loop() {
   if (SerRead == 'Z') {
     VIP_WiFi_Write("GR");
     BuzzerPressed = 0;
+    BuzzerPressedTime = 0;
   }
 
 
