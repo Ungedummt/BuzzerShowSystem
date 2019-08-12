@@ -91,6 +91,7 @@ String IP_long;
 String IP_short;
 String MAC_Address;
 String MAC_Master;
+String ToLate = "";
 WiFiClient Client;
 WiFiServer Port_Master(88);
 
@@ -99,32 +100,32 @@ WiFiServer Port_Master(88);
 //----------------------------------------------------------------------------//
 
 void setup() {
-	Prepare();
+  Prepare();
   NeoPixel_Setup();
   Display_Setup();
-	#if (colored == true)
-	NeoPixel_Write( NeoStart1, NeoNone, NeoNone);
-	delay(500);
-	NeoPixel_Write( NeoStart1, NeoStart2, NeoNone);
-	delay(500);
-	NeoPixel_Write( NeoStart1, NeoStart2, NeoStart3);
-	delay(500);
-	NeoPixel_Write( NeoStart4, NeoStart5, NeoStart6);
-	delay(500);
-	#else
+  #if (colored == true)
+  NeoPixel_Write( NeoStart1, NeoNone, NeoNone);
+  delay(500);
+  NeoPixel_Write( NeoStart1, NeoStart2, NeoNone);
+  delay(500);
+  NeoPixel_Write( NeoStart1, NeoStart2, NeoStart3);
+  delay(500);
+  NeoPixel_Write( NeoStart4, NeoStart5, NeoStart6);
+  delay(500);
+  #else
 
-	#endif
-	WiFi_Setup();
-	/*NeoPixelColor("RESET", 0);
-	for (int i = 0; i < NeoPixelNum; ++i) {
-		NeoRed[i] = 0;
-	}
-	for (int i = 0; i < NeoPixelNum; ++i) {
-		NeoGreen[i] = 0;
-	}
-	for (int i = 0; i < NeoPixelNum; ++i) {
-		NeoBlue[i] = 0;
-	}
+  #endif
+  WiFi_Setup();
+  /*NeoPixelColor("RESET", 0);
+  for (int i = 0; i < NeoPixelNum; ++i) {
+    NeoRed[i] = 0;
+  }
+  for (int i = 0; i < NeoPixelNum; ++i) {
+    NeoGreen[i] = 0;
+  }
+  for (int i = 0; i < NeoPixelNum; ++i) {
+    NeoBlue[i] = 0;
+  }
   /**/
 }
 
@@ -133,115 +134,140 @@ void setup() {
 //----------------------------------------------------------------------------//
 
 void loop() {
-	if (digitalRead(BuzzerPin) == LOW) {
-		if ((millis() - lastPressed) >= PressedInterval) {
-			Display_Write("Pressed");
-			Serial.println("Pressed");
-			lastDisplay = millis();
-			if (SendAllowed && GameisTrue) {// && !AnswerTrue) {
-				WiFi_Write("BP", "");
-				lastMessage = millis();
-				lastPressed = millis();
-				PressedTrue = true;
-			}
-		}
+  if (digitalRead(BuzzerPin) == LOW) {
+    if ((millis() - lastPressed) >= PressedInterval) {
+      if(ToLate != ""){
+        //int ToLateAsInt = float(ToLate).toInt;
+        //if(ToLateAsInt <= 10){
+        Display_Write(ToLate + " Sec to late");
+        //}else{
+          //Display_Write("far to late");
+        //}
+      }else{
+        if(PressedTrue == false){
+        Display_Write("Pressed");
+        Serial.println("Pressed");
+        lastPressed = millis();
+        }
+
+      lastDisplay = millis();
+      if (SendAllowed && GameisTrue) {// && !AnswerTrue) {
+        WiFi_Write("BP", "");
+        lastMessage = millis();
+        lastPressed = millis();
+        PressedTrue = true;
+      }
+      }
+    }
   }
   else {
-		if ((millis() - lastDisplay) >= DisplayInterval){
-			int BatteryCharge = round(analogRead(analogbattery) / 1000.00 * 100);
-			Display_Write("Bat.: " + String(BatteryCharge) + "%");
-			lastDisplay = millis();
-		}
-	}
+    if ((millis() - lastDisplay) >= DisplayInterval){
+      int BatteryCharge = round(analogRead(analogbattery) / 1000.00 * 100);
+      Display_Write("Bat.: " + String(BatteryCharge) + "%");
+      lastDisplay = millis();
+    }
+  }
 
   if (WiFi.status() != WL_CONNECTED) {
     WiFi_Setup();
   }
 
-	if ((millis() - lastMessage) >= MessageInterval && SendAllowed == true) {
-		WiFi_Write("SM", "");
-		lastMessage = millis();
-	}
+  if ((millis() - lastMessage) >= MessageInterval && SendAllowed == true) {
+    WiFi_Write("SM", "");
+    lastMessage = millis();
+  }
 
-	if (!SendAllowed && (FirstMessage + FirstInterval) <= millis()) {
-		WiFi_Write("NB", MAC_Address);
-		FirstMessage = millis();
-	}
+  if (!SendAllowed && (FirstMessage + FirstInterval) <= millis()) {
+    WiFi_Write("NB", MAC_Address);
+    FirstMessage = millis();
+  }
 
-	// Use WiFiClient class to create TCP connections
-	//if((millis() - lastPixel) >= PixelInterval){
-	  //NeoPixel(NeoRed, NeoGreen, NeoBlue);
-	//}
-	//read back one line from server
-	WiFiClient client = Port_Master.available();
-	if (client) {
-		Serial.print("Nachricht: ");
-		String request = client.readStringUntil('\r');
-		Serial.println("********************************");
-		Serial.println("From the station: " + request);
-		Display_Write("Msg.: " + request);
-		lastDisplay = millis();
-		Client.flush();
+  // Use WiFiClient class to create TCP connections
+  //if((millis() - lastPixel) >= PixelInterval){
+    //NeoPixel(NeoRed, NeoGreen, NeoBlue);
+  //}
+  //read back one line from server
+  WiFiClient client = Port_Master.available();
+  if (client) {
+    String request = client.readStringUntil('\r');
+    Client.flush();
+    Serial.print("Nachricht: ");
+    Serial.println("********************************");
+    Serial.println("From the station: " + request);
+    //Display_Write(request);
+    lastDisplay = millis();
 
-		if (request == "AC") {
-			SendAllowed = true;
-		}
-		if (SendAllowed) {
-			if (request == "DE") {
-				SendAllowed = false;
-				GameisTrue = false;
-				//AnswerTrue = false;
-			}
-			if (request == "AR" && GameisTrue) {// && !AnswerTrue) {
-				NeoPixelColor_Write("GREEN", 255);
-				//AnswerTrue = true;
-			}
-			if (request == "AW" && GameisTrue) {//&& !AnswerTrue) {
-				NeoPixelColor_Write("RED", 255);
-				//AnswerTrue = true;
-			}
-			if (request == "GR" && GameisTrue) {
-				NeoPixelColor_Write("RESET", 0);
-				PressedTrue = false;
-				//AnswerTrue = false;
-			}
-			if (request == "GB" && GameisTrue == false) {
-				GameisTrue = true;
-			}
-			if (request == "GS" && GameisTrue) {
-				GameisTrue = false;
-				//AnswerTrue = false;
-			}
-			if (request == "PA" && GameisTrue && PressedTrue) {
-				NeoPixelColor_Write("BLUE", 255);
-				PressedTrue = true;
-			}
-		}
-	}
-}
+    if (request == "AC") {
+      SendAllowed = true;
+    }
+    if (SendAllowed) {
+      if (request == "DE") {
+        SendAllowed = false;
+        GameisTrue = false;
+        //AnswerTrue = false;
+      }
+      if (request == "AR" && GameisTrue) {// && !AnswerTrue) {
+        NeoPixelColor_Write("GREEN", 255);
+        //AnswerTrue = true;
+      }
+      if (request == "AW" && GameisTrue) {//&& !AnswerTrue) {
+        NeoPixelColor_Write("RED", 255);
+        //AnswerTrue = true;
+      }
+      if (request == "GR" && GameisTrue) {
+        NeoPixelColor_Write("RESET", 0);
+        PressedTrue = false;
+        ToLate = "";
+        //AnswerTrue = false;
+      }
+      if (request == "GB" && GameisTrue == false) {
+        GameisTrue = true;
+      }
+      if (request == "GS" && GameisTrue) {
+        GameisTrue = false;
+        ToLate = "";
+        //AnswerTrue = false;
+      }
+      if (request == "PA" && GameisTrue && PressedTrue) {
+        NeoPixelColor_Write("BLUE", 255);
+        PressedTrue = true;
+      }
+      String InputMessageType = getValue(request, ';', 0);
+      if (InputMessageType == "TL" && GameisTrue) {
+        ToLate = getValue(request, ';', 1);
+        //int ToLateAsInt = float(ToLate).toInt
+        //if(ToLateAsInt <= 10){
+        Display_Write(ToLate + " Sec to late");
+        //}else{
+          //Display_Write("far to late");
+        }
+      }
+    }
+  }
+
 
 //----------------------------------------------------------------------------//
 //--------------------------------Functions-----------------------------------//
 //----------------------------------------------------------------------------//
 
 String getValue(String data, char separator, int index) {
-	int found = 0;
-	int strIndex[] = { 0, -1 };
-	int maxIndex = data.length() - 1;
-	for (int i = 0; i <= maxIndex && found <= index; i++) {
-		if (data.charAt(i) == separator || i == maxIndex) {
-			found++;
-			strIndex[0] = strIndex[1] + 1;
-			strIndex[1] = (i == maxIndex) ? i + 1 : i;
-		}
-	}
-	return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
+  int found = 0;
+  int strIndex[] = { 0, -1 };
+  int maxIndex = data.length() - 1;
+  for (int i = 0; i <= maxIndex && found <= index; i++) {
+    if (data.charAt(i) == separator || i == maxIndex) {
+      found++;
+      strIndex[0] = strIndex[1] + 1;
+      strIndex[1] = (i == maxIndex) ? i + 1 : i;
+    }
+  }
+  return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
 void Prepare() {  // for pinModes and more .....
   pinMode(BuzzerPin, INPUT_PULLUP);
-	Serial.begin(9600);
-	Serial.println("\n");
+  Serial.begin(9600);
+  Serial.println("\n");
 }
 
 //----------------------------------------------------------------------------//
@@ -249,63 +275,64 @@ void Prepare() {  // for pinModes and more .....
 //----------------------------------------------------------------------------//
 
 void WiFi_Setup() {
-	if (WiFi.status() != WL_CONNECTED) {
-		SendAllowed = false;
-		GameisTrue = false;
-		PressedTrue = false;
-		//AnswerTrue = false;
-		Display_Write("Connecting    ...");
-	  WiFi.mode(WIFI_STA);
-		WiFi.begin(SSID, KEY);           // connects to the WiFi AP
-	}
+  if (WiFi.status() != WL_CONNECTED) {
+    SendAllowed = false;
+    GameisTrue = false;
+    PressedTrue = false;
+    ToLate = "";
+    //AnswerTrue = false;
+    Display_Write("Connecting    ...");
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(SSID, KEY);           // connects to the WiFi AP
+  }
   while (WiFi.status() != WL_CONNECTED) {
-		if (WiFi.status() != WL_CONNECTED) {
-			Serial.print(".");
-			NeoPixelColor_Write("RED", 100);
-			Display_Write("Connecting     ...");
-			delay(500);
-			Display_Write("Connecting    . ..");
-			delay(125);
-			NeoPixelColor_Write("RESET", 0);
-			delay(375);
-			Display_Write("Connecting    .. .");
-			delay(250);
-			NeoPixelColor_Write("RESET", 100);
-		}
-		if (WiFi.status() != WL_CONNECTED) {
-			delay(250);
-			Display_Write("Connecting    ... ");
-			delay(375);
-			NeoPixelColor_Write("RESET", 0);
-			delay(125);
-			Display_Write("Connecting    ....");
-			delay(500);
-		}
-	}
+    if (WiFi.status() != WL_CONNECTED) {
+      Serial.print(".");
+      NeoPixelColor_Write("RED", 100);
+      Display_Write("Connecting     ...");
+      delay(500);
+      Display_Write("Connecting    . ..");
+      delay(125);
+      NeoPixelColor_Write("RESET", 0);
+      delay(375);
+      Display_Write("Connecting    .. .");
+      delay(250);
+      NeoPixelColor_Write("RESET", 100);
+    }
+    if (WiFi.status() != WL_CONNECTED) {
+      delay(250);
+      Display_Write("Connecting    ... ");
+      delay(375);
+      NeoPixelColor_Write("RESET", 0);
+      delay(125);
+      Display_Write("Connecting    ....");
+      delay(500);
+    }
+  }
   IP_long = WiFi.localIP().toString();
   IP_short = getValue(IP_long, '.', 3);
   MAC_Address = WiFi.macAddress();
   MAC_Master = WiFi.BSSIDstr();
-	Serial.println();
-	Serial.println("Connected");
-	Display_Write("Connected");
-	lastDisplay = millis();
-	Serial.println("buzzer.ino");
-	Serial.println("LocalIP: " + IP_long);
+  Serial.println();
+  Serial.println("Connected");
+  Display_Write("Connected");
+  lastDisplay = millis();
+  Serial.println("buzzer.ino");
+  Serial.println("LocalIP: " + IP_long);
   Serial.println("LocalID: " + IP_short);
-	Serial.println("MAC: " + MAC_Address);
-	Serial.println("MAC Master: " + MAC_Master);
-	Port_Master.begin();
+  Serial.println("MAC: " + MAC_Address);
+  Serial.println("MAC Master: " + MAC_Master);
+  Port_Master.begin();
   WiFi_Write("NB", MAC_Address);
-	FirstMessage = millis();
+  FirstMessage = millis();
   lastMessage = millis();
 }
 
 void WiFi_Write(String MessageType, String Parameters){
   if (WiFi.status() == WL_CONNECTED) {
-		Client.connect(IP_Master, 80);
-		IP_long = WiFi.localIP().toString();
-		IP_short = getValue(IP_long, '.', 3);
+    Client.connect(IP_Master, 80);
+    IP_long = WiFi.localIP().toString();
+    IP_short = getValue(IP_long, '.', 3);
     if (Parameters != NULL || Parameters != "") {
       Client.print(MessageType + ";" + IP_short + ";" + Parameters + '\r');
       Serial.println(MessageType + ";" + IP_short + ";" + Parameters + '\r');
@@ -314,9 +341,9 @@ void WiFi_Write(String MessageType, String Parameters){
       Client.print(MessageType + ";" + IP_short + '\r');
       Serial.println(MessageType + ";" + IP_short + '\r');
     }
-	}
-	else {
-		Serial.println("No connectinon");
+  }
+  else {
+    Serial.println("No connectinon");
   }
 }
 
@@ -326,25 +353,25 @@ void WiFi_Write(String MessageType, String Parameters){
 
 void Display_Setup() {
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
-	display.setRotation(2);
-	display.clearDisplay();
-	display.setTextSize(2);
-	display.setTextColor(WHITE);
+  display.setRotation(2);
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setTextColor(WHITE);
   Display_Write("Starting..");
 }
 
 void Display_Write(String Message) {
   display.setCursor(0, 0);
-	display.println(Message);
-	display.display();
-	display.clearDisplay();
+  display.println(Message);
+  display.display();
+  display.clearDisplay();
 }
 
 void Display_Reset() {
   display.setCursor(0, 0);
-	display.println("");
-	display.display();
-	display.clearDisplay();
+  display.println("");
+  display.display();
+  display.clearDisplay();
 }
 
 //----------------------------------------------------------------------------//
@@ -354,78 +381,78 @@ void Display_Reset() {
 void NeoPixel_Setup() {
   pixels.begin(); // This initializes the NeoPixel library.
   //NeoPixel_Write(NeoRed, NeoGreen, NeoBlue);
-	Serial.println("Pixel aktuell");
-	/*NeoPixelColor_Write("PURPLE", 255);
-	delay(1000);
-	NeoPixelColor_Write("AQUA", 255);
-	delay(1000);
-	NeoPixelColor_Write("YELLOW", 255);
-	delay(1000);
-	NeoPixelColor_Write("BLUE", 255);
-	delay(1000);
-	NeoPixelColor_Write("RED", 255);
-	delay(1000);
-	NeoPixelColor_Write("GREEN", 255);
-	delay(1000);
-	/**/
+  Serial.println("Pixel aktuell");
+  /*NeoPixelColor_Write("PURPLE", 255);
+  delay(1000);
+  NeoPixelColor_Write("AQUA", 255);
+  delay(1000);
+  NeoPixelColor_Write("YELLOW", 255);
+  delay(1000);
+  NeoPixelColor_Write("BLUE", 255);
+  delay(1000);
+  NeoPixelColor_Write("RED", 255);
+  delay(1000);
+  NeoPixelColor_Write("GREEN", 255);
+  delay(1000);
+  /**/
 }
 
 void NeoPixel_Write(int Red[NeoPixelNum], int Green[NeoPixelNum], int Blue[NeoPixelNum]) {
-	for (int i = 0; i < NeoPixelNum; i++) {
-		pixels.setPixelColor(i, pixels.Color(Red[i], Green[i], Blue[i]));
-		pixels.show();
-	}
-	lastPixel = millis();
+  for (int i = 0; i < NeoPixelNum; i++) {
+    pixels.setPixelColor(i, pixels.Color(Red[i], Green[i], Blue[i]));
+    pixels.show();
+  }
+  lastPixel = millis();
 }
 
 void NeoPixelColor_Write(String color, int brightness) {
-	int RED[NeoPixelNum];
-	int GREEN[NeoPixelNum];
-	int BLUE[NeoPixelNum];
-	int NONE[NeoPixelNum];
-	for (int i = 0; i < NeoPixelNum; ++i) {
-		NONE[i] = 0;
-	}
-	if (color == "RESET" || brightness == 0) {
-		NeoPixel_Write(NONE, NONE, NONE);
-	}
-	if (color == "RED") {
-		for (int i = 0; i < NeoPixelNum; ++i) {
-			RED[i] = brightness;
-		}
-		NeoPixel_Write(RED, NONE, NONE);
-	}
-	if (color == "GREEN") {
-		for (int i = 0; i < NeoPixelNum; ++i) {
-			GREEN[i] = brightness;
-		}
-		NeoPixel_Write(NONE, GREEN, NONE);
-	}
-	if (color == "BLUE") {
-		for (int i = 0; i < NeoPixelNum; ++i) {
-			BLUE[i] = brightness;
-		}
-		NeoPixel_Write(NONE, NONE, BLUE);
-	}
-	if (color == "YELLOW") {
-		for (int i = 0; i < NeoPixelNum; i++) {
-			RED[i] = brightness/2;
-			GREEN[i] = brightness/2;
-		}
-		NeoPixel_Write(RED, GREEN, NONE);
-	}
-	if (color == "PURPLE") {
-		for (int i = 0; i < NeoPixelNum; i++) {
-			RED[i] = brightness/2;
-			BLUE[i] = brightness/2;
-		}
-		NeoPixel_Write(RED, NONE, BLUE);
-	}
-	if (color == "AQUA") {
-		for (int i = 0; i < NeoPixelNum; i++) {
-			BLUE[i] = brightness/2;
-			GREEN[i] = brightness/2;
-		}
-		NeoPixel_Write(NONE, GREEN, BLUE);
-	}
+  int RED[NeoPixelNum];
+  int GREEN[NeoPixelNum];
+  int BLUE[NeoPixelNum];
+  int NONE[NeoPixelNum];
+  for (int i = 0; i < NeoPixelNum; ++i) {
+    NONE[i] = 0;
+  }
+  if (color == "RESET" || brightness == 0) {
+    NeoPixel_Write(NONE, NONE, NONE);
+  }
+  if (color == "RED") {
+    for (int i = 0; i < NeoPixelNum; ++i) {
+      RED[i] = brightness;
+    }
+    NeoPixel_Write(RED, NONE, NONE);
+  }
+  if (color == "GREEN") {
+    for (int i = 0; i < NeoPixelNum; ++i) {
+      GREEN[i] = brightness;
+    }
+    NeoPixel_Write(NONE, GREEN, NONE);
+  }
+  if (color == "BLUE") {
+    for (int i = 0; i < NeoPixelNum; ++i) {
+      BLUE[i] = brightness;
+    }
+    NeoPixel_Write(NONE, NONE, BLUE);
+  }
+  if (color == "YELLOW") {
+    for (int i = 0; i < NeoPixelNum; i++) {
+      RED[i] = brightness/2;
+      GREEN[i] = brightness/2;
+    }
+    NeoPixel_Write(RED, GREEN, NONE);
+  }
+  if (color == "PURPLE") {
+    for (int i = 0; i < NeoPixelNum; i++) {
+      RED[i] = brightness/2;
+      BLUE[i] = brightness/2;
+    }
+    NeoPixel_Write(RED, NONE, BLUE);
+  }
+  if (color == "AQUA") {
+    for (int i = 0; i < NeoPixelNum; i++) {
+      BLUE[i] = brightness/2;
+      GREEN[i] = brightness/2;
+    }
+    NeoPixel_Write(NONE, GREEN, BLUE);
+  }
 }
