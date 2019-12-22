@@ -1,4 +1,10 @@
-#include <ESP8266WiFi.h>
+#include "WiFi.h"
+//#include "SerialMP3Player.h"
+
+//#define TX D5
+//#define RX D6
+
+//SerialMP3Player mp3(RX,TX);
 
 //Variabeln I/O------------------------------------------------------------------------------
 
@@ -36,11 +42,11 @@ int GameBeginState = false;
 
 
 //LEDS
-#define addBuzzerLED D3
-#define RichtigButtonLED D0
-#define SpielBeginButtonLED D4
-#define ResetButtonLED D2
-#define FalschButtonLED D1
+#define addBuzzerLED 3
+#define RichtigButtonLED 1
+#define SpielBeginButtonLED 4
+#define ResetButtonLED 2
+#define FalschButtonLED 1
 
 //Arrays
 #define MaxClients 10
@@ -48,6 +54,7 @@ int IPArray [MaxClients] = {};
 int TimeArray [MaxClients] = {};
 String TypeArray [MaxClients] = {};
 String MacArray [MaxClients] = {};
+float ToLateArray [MaxClients] = {};
 String AcceptedMacsArray [MaxClients] = {"3C:71:BF:3A:0F:93","3C:71:BF:39:B2:78","DC:4F:22:60:6E:0B"};
 String CurrentGameMacsArray [MaxClients] = {"3C:71:BF:3A:0F:93","3C:71:BF:39:B2:78","DC:4F:22:60:6E:0B"};
 
@@ -71,7 +78,7 @@ float toLate = 0.00;
 char* SSID = "Buzzer-AP";           // SSID
 char* KEY = "6732987frkubz3458";    // password
 #define CHANNEL 1
-#define HIDDEN true
+#define HIDDEN false
 int max_connection = MaxClients;
 int ClientNum = 0;
 int DispClientNum = 0; //Dies ist die Tatsächliche anzahl an verbundenen Geräten
@@ -84,7 +91,9 @@ IPAddress mask = (255, 255, 255, 0);
 IPAddress ClientServerAddress(192,168,4,100);     // IP address of the ClientServer
 WiFiClient APclient;
 
-//===========================================================================================
+//----------------------------------------------------------------------------//
+//-----------------------------------Setup-------------------------------------//
+//----------------------------------------------------------------------------//
 
 void setup() {
   prepare();
@@ -92,7 +101,9 @@ void setup() {
   WiFi_Setup();
 }
 
-//===========================================================================================
+//----------------------------------------------------------------------------//
+//-----------------------------------Loop-------------------------------------//
+//----------------------------------------------------------------------------//
 
 void loop() {
   //Das ist unsere Uhr
@@ -122,16 +133,25 @@ void loop() {
 
 
 
-   if(MessageType == "BP"){
+   if(MessageType == "BP" && GameState == 1){
    if(BuzzerPressed == 0){
     BuzzerPressed = 1;
     BuzzerPressedTime = millis();
     WiFi_Write("PA", IDasInt);
+//    mp3.play(2,100);
         }else{
-          toLate = ((millis() - BuzzerPressedTime) / 1000.00);
-          Serial.print(toLate,3);
-          Serial.println(" Seconds to late ;) - " + DeviceID);
-          WiFi_Write((String(toLate,3) + " Sec to late"), IDasInt);
+          for (int i = 0; i < ClientNum;) {
+          if (IDasInt == IPArray[i]) {
+            if(ToLateArray[i] == 0){
+              toLate = ((millis() - BuzzerPressedTime) / 1000.00);
+              ToLateArray[i] = (toLate,3);
+              Serial.print(toLate,3);
+              Serial.println(" Seconds to late ;) - " + DeviceID);
+              WiFi_Write(("TL;" + (String(toLate,3))), IDasInt);
+            }
+          }
+          i++;
+          }
         }
         }
 
@@ -184,6 +204,10 @@ void loop() {
   if (SerRead == 'S') {
     VIP_WiFi_Write("GS");
     GameState = 0;
+    for (int i = 0; i < ClientNum;) {
+      ToLateArray[i] = 0;
+      i++;
+    }
     BuzzerPressedTime = 0;
   }
   if (SerRead == 'R') {
@@ -194,6 +218,10 @@ void loop() {
   }
   if (SerRead == 'Z') {
     VIP_WiFi_Write("GR");
+    for (int i = 0; i < ClientNum;) {
+      ToLateArray[i] = 0;
+      i++;
+    }
     BuzzerPressed = 0;
     BuzzerPressedTime = 0;
   }
@@ -209,7 +237,12 @@ DeviceHandler();
 //===========================================================================================
 
 void prepare(){
-  Serial.begin(9600);
+  Serial.begin(115200);
+  //mp3.begin(9600);        // start mp3-communication
+  //(500);             // wait for init
+
+  //mp3.sendCommand(CMD_SEL_DEV, 0, 2);   //select sd-card
+  //delay(500);             // wait for init
   WelcomeMessage();
 }
 
@@ -221,15 +254,15 @@ void Display_Setup(){
 
 //===========================================================================================
 
-void WiFi_Setup(){
+void 0(){
 WiFi.mode(WIFI_AP);
 WiFi.softAP(SSID, KEY, CHANNEL, HIDDEN, max_connection);
 WiFi.softAPConfig(IP, IP, mask);
 APServerPort.begin();
 Serial.println();
 Serial.println("MasterServer started.");
-Serial.println("IP: " + WiFi.softAPIP());
-Serial.println("MAC:" + WiFi.softAPmacAddress());
+Serial.println("IP: 192.168.4.1");
+Serial.println("MAC:" + WiFi.macAddress());
 }
 
 //===========================================================================================
