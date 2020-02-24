@@ -100,7 +100,7 @@ WiFiServer Port_Master(88);
 //----------------------------------------------------------------------------//
 
 void setup() {
-  Prepare();
+  Io_Setup();
   NeoPixel_Setup();
   Display_Setup();
   #if (colored == true)
@@ -264,7 +264,7 @@ String getValue(String data, char separator, int index) {
   return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
-void Prepare() {  // for pinModes and more .....
+void Io_Setup() {  // for pinModes and more .....
   pinMode(BuzzerPin, INPUT_PULLUP);
   Serial.begin(9600);
   Serial.println("\n");
