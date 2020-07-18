@@ -1,5 +1,9 @@
 #include "WiFi.h"
+#include <Wire.h>
+#include "PCF8574.h"
 //#include "SerialMP3Player.h"
+
+PCF8574 pcf8574(0x20); //GPIO MULTIPLEXER
 
 //#define TX D5
 //#define RX D6
@@ -33,23 +37,23 @@ int ResetGameButtonRange[2]{845,846};
 int WrongButtonRange[2]{842,843};
 int RightButtonRange[2]{835,838};
 int GameBeginRange[2]{805,806};
-//Button States
-int AddBuzzerButtonState = false;
-int ResetGameButtonState = false;
-int WrongButtonState = false;
-int RightButtonState = false;
-int GameBeginState = false;
+
+//Button Defines For Multiplexer
+#define ResetGameButtonState P1
+#define WrongButtonState P2
+#define RightButtonState P3
+#define GameBeginState P4
 
 
-//LEDS
-#define addBuzzerLED 3
-#define RichtigButtonLED 1
-#define SpielBeginButtonLED 4
-#define ResetButtonLED 2
-#define FalschButtonLED 1
+//LEDS Defines For Multiplexer
+#define ResetButtonLED P5
+#define WrongButtonLED P6
+#define RightButtonLED P7
+#define GameBeginButtonLED P8
+
 
 //Arrays
-#define MaxClients 10
+#define MaxClients 8
 int IPArray [MaxClients] = {};
 int TimeArray [MaxClients] = {};
 String TypeArray [MaxClients] = {};
@@ -243,6 +247,16 @@ void prepare(){
 
   //mp3.sendCommand(CMD_SEL_DEV, 0, 2);   //select sd-card
   //delay(500);             // wait for init
+  pcf8574.pinMode(ResetGameButtonState, INPUT);
+  pcf8574.pinMode(WrongButtonState, INPUT);
+  pcf8574.pinMode(RightButtonState, INPUT);
+  pcf8574.pinMode(GameBeginState, INPUT);
+  pcf8574.pinMode(ResetButtonLED, OUTPUT);
+  pcf8574.pinMode(WrongButtonLED, OUTPUT);
+  pcf8574.pinMode(RightButtonLED, OUTPUT);
+  pcf8574.pinMode(GameBeginButtonLED, OUTPUT);
+  pcf8574.begin();
+
   WelcomeMessage();
 }
 
@@ -460,16 +474,29 @@ void AddDevice(String DeviceType, int DeviceID, String DeviceMAC){           //S
 //===========================================================================================
 
 
-void LedHandler(String LedName, String Effect){
+void DMXLedHandler(String LedName, String Effect){
 
 }
 
-//===========================================================================================
+void ButtonHandler(){
+if(pcf8574.digitalRead(ResetGameButtonState) == HIGH){
+  //Reset the Game
+}
 
+if(pcf8574.digitalRead(WrongButtonState) == HIGH){
+  //Wrong Answer Event
+}
 
-void AnalogButtonsHandler(){
+if(pcf8574.digitalRead(RightButtonState) == HIGH){
+  //Right Answer Event
+}
+
+if(pcf8574.digitalRead(GameBeginState) == HIGH){
+  //Start the Game
+}
 
 }
+
 
 //===========================================================================================
 
