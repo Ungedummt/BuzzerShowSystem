@@ -70,7 +70,7 @@ bool is_authentified(){
       Serial.println("Authentification Failed");
       return false;
     }
-  
+
   }
 }
 
@@ -202,4 +202,8 @@ void loop() {
   dnsServer.processNextRequest();
   //HTTP
   server.handleClient();
+}
+
+void handleRequest(){
+  Serial.print("Top");
 }
