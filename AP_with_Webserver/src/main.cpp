@@ -2,6 +2,8 @@
 #include <WebServer.h>
 #include <DNSServer.h>
 #include <Preferences.h>
+#include <ESPmDNS.h>
+
 
 Preferences preferences;
 
@@ -47,9 +49,7 @@ String login = "<div class='login-block'><form action='/login' method='POST'> <h
 
 void Connect_WiFi(){
   WiFi.begin(ssid, password);
-  while(WiFi.status() != WL_CONNECTED){
-    delay(100);
-  }
+MDNS.begin("BSS");
 }
 
 bool is_authentified(){
