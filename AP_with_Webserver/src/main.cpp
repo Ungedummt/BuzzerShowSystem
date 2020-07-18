@@ -163,6 +163,15 @@ void handleActions(){
   server.send(200, "text/html", (head + main_header + new_actions + "<a href='/login?DISCONNECT=YES'>disconnect</a>" + footer + "</body>" + style + "</html>"));
 }
 
+void handleSaveSettings(){
+  if(server.hasArg("quiz_type")){
+    //quiz_type = server.arg("quiz_type");
+    preferences.putString("quiz_type", server.arg("quiz_type"));
+    server.send(200, "text/html", preferences.getString("quiz_type"));
+  }
+  //Serial.println(server.hasArg("quiz_type"));
+}
+
 void setup() {
   preferences.begin("my-app",false);
   //preferences.putString("QuizType","lalalala");
@@ -181,7 +190,12 @@ void setup() {
   server.on("/basics", handleBasics);
   server.on("/actions", handleActions);
   server.on("/dmx", handleDMX);
+  server.on("/save", handleSaveSettings);
   server.onNotFound(handleRoot);
+
+  Serial.println("##############################");
+  Serial.println(preferences.getString("quiz_type"));
+  Serial.println("##############################");
 
   const char * headerkeys[] = {"User-Agent","Cookie"} ;
   size_t headerkeyssize = sizeof(headerkeys)/sizeof(char*);
@@ -200,5 +214,5 @@ void loop() {
 }
 
 void handleRequest(){
-  Serial.print("Top");
+  Serial.println("Top");
 }
