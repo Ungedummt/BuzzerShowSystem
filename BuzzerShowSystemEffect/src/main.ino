@@ -72,38 +72,38 @@ WiFiServer Port_Master(88);
 void setup() {
 	Prepare();
 	DMX_Setup();
-	WiFi_Setup();
+	//WiFi_Setup();
 }
 
 void loop() {
-	if (WiFi.status() != WL_CONNECTED) {
-    WiFi_Setup();
-	}
+	//if (WiFi.status() != WL_CONNECTED) {
+  //  WiFi_Setup();
+	//}
 
-	if ((millis() - lastMessage) >= MessageInterval && SendAllowed == true) {
-		WiFi_Write("SM", "");
-		lastMessage = millis();
-	}
+	//if ((millis() - lastMessage) >= MessageInterval && SendAllowed == true) {
+	//	WiFi_Write("SM", "");
+	//	lastMessage = millis();
+	//}
 
-	//DMX_Lamp(1, BRGBWChannelpostition, rgbwRightColor);// Muss Array mit 5 und 4 stellen sein
-	//DMX_Lamp(2, BRGBWChannelpostition, rgbwWrongColor);
+	//DMX_Lamp(1, BRGBWChannelpostition, brgbwRightColor);// Muss Array mit 5 und 4 stellen sein
+	//DMX_Lamp(2, BRGBWChannelpostition, brgbwWrongColor);
 
-	DMX_LampColor(1, BRGBWChannelpostition, "ALL", 255);
+	DMX_LampColor(1, BRGBWChannelpostition, "RED", 255);
 	DMX_LampColor(2, BRGBWChannelpostition, "ALL", 255);
 
 	DMX_Update();
 
-	WiFiClient client = Port_Master.available();
-	if (client) {
-		Serial.print("Nachricht: ");
-		String request = client.readStringUntil('\r');
-		Serial.println("********************************");
-		Serial.println("From the station: " + request);
-		Client.flush();
-		if (request == "AC") {
-			SendAllowed = true;
-		}
-	}
+	//WiFiClient client = Port_Master.available();
+	//if (client) {
+	//	Serial.print("Nachricht: ");
+	//	String request = client.readStringUntil('\r');
+	//	Serial.println("********************************");
+	//	Serial.println("From the station: " + request);
+	//	Client.flush();
+	//	if (request == "AC") {
+	//		SendAllowed = true;
+	//	}
+	//}
 }
 
 //----------------------------------------------------------------------------//
