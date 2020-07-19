@@ -195,15 +195,13 @@ void handleSaveSettings(){
     server.sendHeader("Cache-Control","no-cache");
     server.send(301);
   }
-  //Serial.println(server.hasArg("quiz_type"));
 }
 
 void handleRequest(){
-  Serial.println("Top");
 }
 
 void setup() {
-  preferences.begin("my-app",false);
+  preferences.begin("my-app");
   //preferences.clear();
   Serial.begin(115200);
   Serial.print("Setting soft access point mode");
@@ -211,11 +209,15 @@ void setup() {
   IPAddress IP = WiFi.softAPIP();
   Serial.print("AP IP address: ");
   Serial.println(IP);
+
   server.on("/", handleRoot);
+
+  //This is for the Wlan login websites
   server.on("/generate_204", handleRoot); //Android captive portal. Maybe not needed. Might be handled by notFound handler.
   server.on("/connectivitycheck.gstatic.com", handleRoot); //Android captive portal. Maybe not needed. Might be handled by notFound handler.
   server.on("/fwlink", handleRoot);
-  server.on("/nmcheck.gnome.org", handleRoot);
+  server.on("/nmcheck.gnome.org", handleRoot); //This is for Linux devices with the gnome desktop
+
   server.on("/login", handleLogin);
   server.on("/basics", handleBasics);
   server.on("/actions", handleActions);
