@@ -20,11 +20,6 @@ DNSServer dnsServer;
 IPAddress apIP(192, 168, 4, 1);
 IPAddress netMsk(255, 255, 255, 0);
 
-String quiz_type = "normal";
-String PlayerWrongNextPlayserbyReset = "false";
-String PlayersCanSeeDelays = "false";
-String PlayersPressMultipleTimes = "true";
-
 String head = "<!DOCTYPE html><html lang='en'>";
 
 String main_header =  "<head><meta http-equiv='content-type' content='text/html; charset=UTF-8'><meta charset='utf-8'><title>Configuration</title></head>";
