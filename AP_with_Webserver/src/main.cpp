@@ -4,7 +4,6 @@
 #include <Preferences.h>
 #include <ESPmDNS.h>
 
-
 //codename: Julie
 
 Preferences preferences;
@@ -41,19 +40,9 @@ String BoolToString(bool BoolInString){
   return BoolInString ? "true" : "false";
 }
 
-bool IntToBool(int IntInBool){
-  bool Boll;
-  if (IntInBool == 1){
-    Boll = true;
-  } else {
-    Boll = false;
-  }
-  return Boll;
-}
-
 void Connect_WiFi(){
   WiFi.begin(ssid, password);
-MDNS.begin("BSS");
+  MDNS.begin("BSS");
 }
 
 bool is_authentified(){
@@ -223,10 +212,10 @@ void setup() {
   Serial.print("AP IP address: ");
   Serial.println(IP);
   server.on("/", handleRoot);
-//server.on("/generate_204", handleRoot); //Android captive portal. Maybe not needed. Might be handled by notFound handler.
-//server.on("/connectivitycheck.gstatic.com", handleRoot); //Android captive portal. Maybe not needed. Might be handled by notFound handler.
-//server.on("/fwlink", handleRoot);
-  //server.on("/nmcheck.gnome.org", handleRoot);
+  server.on("/generate_204", handleRoot); //Android captive portal. Maybe not needed. Might be handled by notFound handler.
+  server.on("/connectivitycheck.gstatic.com", handleRoot); //Android captive portal. Maybe not needed. Might be handled by notFound handler.
+  server.on("/fwlink", handleRoot);
+  server.on("/nmcheck.gnome.org", handleRoot);
   server.on("/login", handleLogin);
   server.on("/basics", handleBasics);
   server.on("/actions", handleActions);
@@ -235,11 +224,6 @@ void setup() {
   server.onNotFound(handleRoot);
 
   updateBasics();
-
-  Serial.println('P');
-  Serial.println("##############################");
-  Serial.println(BoolToString(preferences.getBool("PlayerWrongNextPlayserbyReset")));
-  Serial.println("##############################");
 
   const char * headerkeys[] = {"User-Agent","Cookie"} ;
   size_t headerkeyssize = sizeof(headerkeys)/sizeof(char*);
