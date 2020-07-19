@@ -268,7 +268,7 @@ void Display_Setup(){
 
 //===========================================================================================
 
-void 0(){
+void WiFi_Setup(){
 WiFi.mode(WIFI_AP);
 WiFi.softAP(SSID, KEY, CHANNEL, HIDDEN, max_connection);
 WiFi.softAPConfig(IP, IP, mask);
