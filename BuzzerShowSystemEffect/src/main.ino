@@ -11,9 +11,6 @@
 
 #define statusLED D7
 
-//Variabeln Sonstige-------------------------------------------------------------------------
-
-
 //----------------------------------------------------------------------------//
 //-----------------------------Variables DMX----------------------------------//
 //----------------------------------------------------------------------------//
@@ -33,7 +30,7 @@ int brgbwPressedPlayerColor[5] = { 255,255,255,255,255 }; //dies ist die Farbe d
 int brgbwOtherPlayersColorRight[5] = { 0,0,0,0,50 }; //dies ist die Farbe die bei den anderen Spielern Erscheint wenn jemand gedrückt hat
 int brgbwOtherPlayersColorWrong[5] = { 0,0,0,0,50 }; //dies ist die Farbe die bei den anderen Spielern Erscheint wenn jemand gedrückt hat
 int brgbwColor[5];
-const int brgbwNone[5] = { 0,0,0,0,0 };
+int brgbwNone[5] = { 0,0,0,0,0 };
 
 //Animations------------------------------------------------------------------------------------------------------------------
 int Animation1[4] = { 0  ,0  ,0  ,0 };
@@ -128,8 +125,7 @@ void DMX_Lamp_Color(int Lamp, int brgbwPosition[5], String color, int brightness
 	int NONE = 0;
 	int BRIGHT = 255;
 	if (color == "RESET" || brightness == 0) {
-		int brgbwColor[5] = {BRIGHT, NONE, NONE, NONE, NONE};
-		DMX_Lamp(Lamp, brgbwPosition, brgbwColor);
+		DMX_Lamp(Lamp, brgbwPosition, brgbwNone);
 	}
 	if (color == "RED") {
 		int brgbwColor[5] = {BRIGHT, RED, NONE, NONE, NONE};
@@ -179,7 +175,7 @@ void DMX_Send() {
 	dmx.update();
 }
 
-void UpdateEffectVar(int Channel, int Value) {
+void Update_Effect_Var(int Channel, int Value) {
 	effect[Channel] = Value;
 }
 
@@ -189,7 +185,7 @@ void DMX_Lamp(int Lamp, int brgbwPosition[5], int brgbwColor[5]) {
 		if (Channelposition != 0) {
 			int Channel = (StartChannelNum[Lamp - 1] + Channelposition - 1);
 			int Color = brgbwColor[i];
-			UpdateEffectVar(Channel, Color);
+			effect[Channel] = Color;
 		}
 	}
 }
@@ -198,7 +194,7 @@ void DMX_Lamp(int Lamp, int brgbwPosition[5], int brgbwColor[5]) {
 //--------------------------------Functions-----------------------------------//
 //----------------------------------------------------------------------------//
 
-String getValue(String data, char separator, int index) {
+String Get_Value(String data, char separator, int index) {
 	int found = 0;
 	int strIndex[] = { 0, -1 };
 	int maxIndex = data.length() - 1;
@@ -216,7 +212,7 @@ void Prepare() {  // for pinModes and more .....
 	Serial.begin(9600);
 }
 
-void wait(int time) {
+void Wait(int time) {
 	long start = millis();
 	while ((start + time) >= millis()) {
 		DMX_Update();
@@ -235,13 +231,13 @@ void WiFi_Setup() {
 		Serial.print(".");
 		DMX_Lamp_Color(1, brgbwChannelpostition, "RED", 255);
 		DMX_Lamp_Color(2, brgbwChannelpostition, "RESET", 255);
-		wait(500);
+		Wait(500);
 		DMX_Lamp_Color(2, brgbwChannelpostition, "RED", 255);
 		DMX_Lamp_Color(1, brgbwChannelpostition, "RESET", 255);
-		wait(500);
+		Wait(500);
 	}
   IP_long = WiFi.localIP().toString();
-  IP_short = getValue(IP_long, '.', 3);
+  IP_short = Get_Value(IP_long, '.', 3);
   MAC_Address = WiFi.macAddress();
   MAC_Master = WiFi.BSSIDstr();
 	Serial.println();
@@ -261,7 +257,7 @@ void WiFi_Write(String MessageType, String Parameters){
   if (WiFi.status() == WL_CONNECTED) {
 		Client.connect(IP_Master, 80);
 		IP_long = WiFi.localIP().toString();
-		IP_short = getValue(IP_long, '.', 3);
+		IP_short = Get_Value(IP_long, '.', 3);
     if (Parameters != NULL || Parameters != "") {
       Client.print(MessageType + ";" + IP_short + ";" + Parameters + '\r');
       Serial.println(MessageType + ";" + IP_short + ";" + Parameters + '\r');
