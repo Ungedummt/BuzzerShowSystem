@@ -33,12 +33,12 @@ int brgbwColor[5];
 int brgbwNone[5] = { 0,0,0,0,0 };
 
 //Animations------------------------------------------------------------------------------------------------------------------
-int Animation1[4] = { 0  ,0  ,0  ,0 };
-int Animation2[4] = { 145,160,145,145 };
-int Animation3[4] = { 135,180,135,135 };
-int Animation4[4] = { 115,205,115,115 };
-int Animation5[4] = { 75 ,235,75 ,75 };
-int Animation6[4] = { 0  ,255,0  ,0 };
+int Animation1[5] = { 255,0  ,0  ,0  ,0   };
+int Animation2[5] = { 255,145,160,145,145 };
+int Animation3[5] = { 255,135,180,135,135 };
+int Animation4[5] = { 255,115,205,115,115 };
+int Animation5[5] = { 255,100,235,100,100 };
+int Animation6[5] = { 255,0  ,255,0  ,0   };
 
 //----------------------------------------------------------------------------//
 //----------------------------Variables Millis--------------------------------//
@@ -90,7 +90,19 @@ void loop() {
 
 	DMX_Lamp_Color(1, brgbwChannelpostition, "GREEN", 255);
 	DMX_Lamp_Color(2, brgbwChannelpostition, "ALL", 255);
-
+	
+	//DMX_Lamp(1, brgbwChannelpostition, Animation1);
+	//Wait(300);
+	//DMX_Lamp(1, brgbwChannelpostition, Animation2);
+	//Wait(300);
+	//DMX_Lamp(1, brgbwChannelpostition, Animation3);
+	//Wait(300);
+	//DMX_Lamp(1, brgbwChannelpostition, Animation4);
+	//Wait(300);
+	//DMX_Lamp(1, brgbwChannelpostition, Animation5);
+	//Wait(300);
+	//DMX_Lamp(1, brgbwChannelpostition, Animation6);
+	//Wait(2000);
 	DMX_Update();
 
 	//WiFiClient client = Port_Master.available();
@@ -185,7 +197,7 @@ void DMX_Lamp(int Lamp, int brgbwPosition[5], int brgbwColor[5]) {
 		if (Channelposition != 0) {
 			int Channel = (StartChannelNum[Lamp - 1] + Channelposition - 1);
 			int Color = brgbwColor[i];
-			effect[Channel] = Color;
+			Update_Effect_Var(Channel, Color);
 		}
 	}
 }
