@@ -14,9 +14,12 @@
 //Variabeln Sonstige-------------------------------------------------------------------------
 
 
-//DMX Config
+//----------------------------------------------------------------------------//
+//-----------------------------Variables DMX----------------------------------//
+//----------------------------------------------------------------------------//
+
 int StartChannelNum[20] = { 1,9,18 };
-int BRGBWChannelpostition[5] = { 4,5,6,7,8 }; //das ist die position im bereich wo RGB liegt
+int brgbwChannelpostition[5] = { 4,5,6,7,8 }; //das ist die position im bereich wo RGB liegt
 int effect[20];
 
 DMXESPSerial dmx;
@@ -29,7 +32,7 @@ int brgbwStandbyColor[5] = { 255,150,150,150,150 }; //w nur falls existent anson
 int brgbwPressedPlayerColor[5] = { 255,255,255,255,255 }; //dies ist die Farbe die bei dem Spieler Erscheint der als Erster Gedrückt hat
 int brgbwOtherPlayersColorRight[5] = { 0,0,0,0,50 }; //dies ist die Farbe die bei den anderen Spielern Erscheint wenn jemand gedrückt hat
 int brgbwOtherPlayersColorWrong[5] = { 0,0,0,0,50 }; //dies ist die Farbe die bei den anderen Spielern Erscheint wenn jemand gedrückt hat
-int BRGBWColor[5];
+int brgbwColor[5];
 const int brgbwNone[5] = { 0,0,0,0,0 };
 
 //Animations------------------------------------------------------------------------------------------------------------------
@@ -85,11 +88,11 @@ void loop() {
 	//	lastMessage = millis();
 	//}
 
-	//DMX_Lamp(1, BRGBWChannelpostition, brgbwRightColor);// Muss Array mit 5 und 4 stellen sein
-	//DMX_Lamp(2, BRGBWChannelpostition, brgbwWrongColor);
+	//DMX_Lamp(1, brgbwChannelpostition, brgbwRightColor);// Muss Array mit 5 und 4 stellen sein
+	//DMX_Lamp(2, brgbwChannelpostition, brgbwWrongColor);
 
-	DMX_LampColor(1, BRGBWChannelpostition, "RED", 255);
-	DMX_LampColor(2, BRGBWChannelpostition, "ALL", 255);
+	DMX_Lamp_Color(1, brgbwChannelpostition, "GREEN", 255);
+	DMX_Lamp_Color(2, brgbwChannelpostition, "ALL", 255);
 
 	DMX_Update();
 
@@ -117,7 +120,7 @@ void DMX_Setup() {
 	Serial.println("Ending DMX Setup ...");
 }
 
-void DMX_LampColor(int Lamp, int BRGBWPosition[5], String color, int brightness) {
+void DMX_Lamp_Color(int Lamp, int brgbwPosition[5], String color, int brightness) {
 	int RED = brightness;
 	int GREEN = brightness;
 	int BLUE = brightness;
@@ -125,40 +128,40 @@ void DMX_LampColor(int Lamp, int BRGBWPosition[5], String color, int brightness)
 	int NONE = 0;
 	int BRIGHT = 255;
 	if (color == "RESET" || brightness == 0) {
-		int BRGBWColor[5] = {BRIGHT, NONE, NONE, NONE, NONE};
-		DMX_Lamp(Lamp, BRGBWPosition, BRGBWColor);
+		int brgbwColor[5] = {BRIGHT, NONE, NONE, NONE, NONE};
+		DMX_Lamp(Lamp, brgbwPosition, brgbwColor);
 	}
 	if (color == "RED") {
-		int BRGBWColor[5] = {BRIGHT, RED, NONE, NONE, NONE};
-		DMX_Lamp(Lamp, BRGBWPosition, BRGBWColor);
+		int brgbwColor[5] = {BRIGHT, RED, NONE, NONE, NONE};
+		DMX_Lamp(Lamp, brgbwPosition, brgbwColor);
 	}
 	if (color == "GREEN") {
-		int BRGBWColor[5] = {BRIGHT, NONE, GREEN, NONE, NONE};
-		DMX_Lamp(Lamp, BRGBWPosition, BRGBWColor);
+		int brgbwColor[5] = {BRIGHT, NONE, GREEN, NONE, NONE};
+		DMX_Lamp(Lamp, brgbwPosition, brgbwColor);
 	}
 	if (color == "BLUE") {
-		int BRGBWColor[5] = {BRIGHT, NONE, NONE, BLUE, NONE};
-		DMX_Lamp(Lamp, BRGBWPosition, BRGBWColor);
+		int brgbwColor[5] = {BRIGHT, NONE, NONE, BLUE, NONE};
+		DMX_Lamp(Lamp, brgbwPosition, brgbwColor);
 	}
 	if (color == "PURPLE") {
-		int BRGBWColor[5] = {BRIGHT, RED/2, NONE, BLUE/2, NONE};
-		DMX_Lamp(Lamp, BRGBWPosition, BRGBWColor);
+		int brgbwColor[5] = {BRIGHT, RED/2, NONE, BLUE/2, NONE};
+		DMX_Lamp(Lamp, brgbwPosition, brgbwColor);
 	}
 	if (color == "YELLOW") {
-		int BRGBWColor[5] = {BRIGHT, RED/2, GREEN/2, NONE, NONE};
-		DMX_Lamp(Lamp, BRGBWPosition, BRGBWColor);
+		int brgbwColor[5] = {BRIGHT, RED/2, GREEN/2, NONE, NONE};
+		DMX_Lamp(Lamp, brgbwPosition, brgbwColor);
 	}
 	if (color == "AQUA") {
-		int BRGBWColor[5] = {BRIGHT, NONE, GREEN/2, BLUE/2, NONE};
-		DMX_Lamp(Lamp, BRGBWPosition, BRGBWColor);
+		int brgbwColor[5] = {BRIGHT, NONE, GREEN/2, BLUE/2, NONE};
+		DMX_Lamp(Lamp, brgbwPosition, brgbwColor);
 	}
 	if (color == "WHITE") {
-		int BRGBWColor[5] = {BRIGHT, NONE, NONE, NONE, WHITE};
-		DMX_Lamp(Lamp, BRGBWPosition, BRGBWColor);
+		int brgbwColor[5] = {BRIGHT, NONE, NONE, NONE, WHITE};
+		DMX_Lamp(Lamp, brgbwPosition, brgbwColor);
 	}
 	if (color == "ALL") {
-		int BRGBWColor[5] = {BRIGHT, RED, GREEN, BLUE, WHITE};
-		DMX_Lamp(Lamp, BRGBWPosition, BRGBWColor);
+		int brgbwColor[5] = {BRIGHT, RED, GREEN, BLUE, WHITE};
+		DMX_Lamp(Lamp, brgbwPosition, brgbwColor);
 	}
 }
 
@@ -180,12 +183,12 @@ void UpdateEffectVar(int Channel, int Value) {
 	effect[Channel] = Value;
 }
 
-void DMX_Lamp(int Lamp, int BRGBWPosition[5], int BRGBWColor[5]) {
+void DMX_Lamp(int Lamp, int brgbwPosition[5], int brgbwColor[5]) {
 	for (int i = 0; i < 5; i++) {
-		Channelposition = BRGBWPosition[i];
+		Channelposition = brgbwPosition[i];
 		if (Channelposition != 0) {
 			int Channel = (StartChannelNum[Lamp - 1] + Channelposition - 1);
-			int Color = BRGBWColor[i];
+			int Color = brgbwColor[i];
 			UpdateEffectVar(Channel, Color);
 		}
 	}
@@ -230,11 +233,11 @@ void WiFi_Setup() {
 	WiFi.begin(SSID, KEY);           // connects to the WiFi AP
   while (WiFi.status() != WL_CONNECTED) {
 		Serial.print(".");
-		DMX_LampColor(1, BRGBWChannelpostition, "RED", 255);
-		DMX_LampColor(2, BRGBWChannelpostition, "RESET", 255);
+		DMX_Lamp_Color(1, brgbwChannelpostition, "RED", 255);
+		DMX_Lamp_Color(2, brgbwChannelpostition, "RESET", 255);
 		wait(500);
-		DMX_LampColor(2, BRGBWChannelpostition, "RED", 255);
-		DMX_LampColor(1, BRGBWChannelpostition, "RESET", 255);
+		DMX_Lamp_Color(2, brgbwChannelpostition, "RED", 255);
+		DMX_Lamp_Color(1, brgbwChannelpostition, "RESET", 255);
 		wait(500);
 	}
   IP_long = WiFi.localIP().toString();
