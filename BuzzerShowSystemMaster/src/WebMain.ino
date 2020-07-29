@@ -774,3 +774,15 @@ void handleSaveSettings() {
 void handleRequest() {
   Serial.println("Top");
 }
+
+//############################################################################//
+//###################################BadUSB###################################//
+//############################################################################//
+
+void send_key(char key) {
+  Wire.beginTransmission(SLAVE_ADDR); // transmit to device
+  Wire.write("p:");        // sends five bytes
+  Wire.write(key);
+  Wire.write(";");
+  Wire.endTransmission();    // stop transmitting
+}
