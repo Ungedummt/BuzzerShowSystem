@@ -72,7 +72,7 @@ void handleLogin(){
     server.send(301);
   }
   else if (server.hasArg("USERNAME") && server.hasArg("PASSWORD")){
-    if (server.arg("USERNAME") == "admin" &&  server.arg("PASSWORD") == "admin" ){
+    if (server.arg("USERNAME") == "admin" &&  server.arg("PASSWORD") == "admin"){
       server.sendHeader("Location","/basics");
       server.sendHeader("Cache-Control","no-cache");
       server.sendHeader("Set-Cookie","ESPSESSIONID=1");
